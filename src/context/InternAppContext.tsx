@@ -29,9 +29,9 @@ import type {
   WorkAreaOption,
 } from "@/types/intern";
 
-const SESSION_KEY = "ashai-intern-session-v6";
-const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v6:";
-const ROSTER_KEY = "ashai-intern-cleaning-roster-v6";
+const SESSION_KEY = "ashai-intern-session-v7";
+const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v7:";
+const ROSTER_KEY = "ashai-intern-cleaning-roster-v7";
 const THEME_KEY = "ashai-theme-v1";
 
 export type AppTheme = "dark" | "light";
@@ -144,8 +144,8 @@ function normalizeRoster(
   const base: SharedCleaningRosterState = {
     dayNumber: INITIAL_CLEANING_ROSTER.dayNumber,
     lastCalendarDate: todayIso,
-    timedInTodayAccountIds: [],
-    assignedAccountIds: [],
+    timedInTodayAccountIds: [...INITIAL_CLEANING_ROSTER.timedInTodayAccountIds],
+    assignedAccountIds: [...INITIAL_CLEANING_ROSTER.assignedAccountIds],
     completedTodayByAccount: {},
     totalCleaningsByAccount: baseCounts,
   };

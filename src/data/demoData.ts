@@ -62,8 +62,8 @@ export const CLEANERS_PER_DAY = 3;
 export const INITIAL_CLEANING_ROSTER: SharedCleaningRosterState = {
   dayNumber: 1,
   lastCalendarDate: "2026-11-26",
-  timedInTodayAccountIds: [],
-  assignedAccountIds: [],
+  timedInTodayAccountIds: ["acc-jericho"],
+  assignedAccountIds: ["acc-jericho"],
   completedTodayByAccount: {},
   totalCleaningsByAccount: {
     "acc-jericho": 0,
@@ -232,8 +232,8 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 22.09,
     initialShiftStartLabel: "8:25 AM",
     initialShiftTrack: "IT / software development",
-    initialTimedIn: false,
-    initialCleaningAssigned: false,
+    initialTimedIn: true,
+    initialCleaningAssigned: true,
   },
   {
     id: "acc-franz",
