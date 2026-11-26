@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import {
   AlertCircle,
@@ -230,17 +229,11 @@ export default function OrasPage() {
 
   return (
     <div className="space-y-5">
-      {/* Page Title + Open my leads CTA */}
+      {/* Page Title */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
           Oras at daily reports
         </h1>
-        <Link
-          href="/me/leads"
-          className="ashai-tap-target inline-flex items-center justify-center rounded-xl bg-[var(--accent-teal)] px-4 py-2.5 text-sm font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)]"
-        >
-          Open my leads
-        </Link>
       </div>
 
       {/* ORAS KO Progress Card */}
@@ -409,29 +402,6 @@ export default function OrasPage() {
             />
           ))}
         </div>
-      </section>
-
-      {/* Dedicated Leads Navigation Card (replaces duplicated full Leads form inside Oras) */}
-      <section
-        aria-label="Client leads shortcut"
-        className="ashai-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4"
-      >
-        <div className="min-w-0 flex-1">
-          <p className="text-base font-bold text-[var(--text-primary)]">
-            Client leads · {state.leads.length}
-          </p>
-          <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-muted)]">
-            Moved to the dedicated Leads tab so daily reports stay easy to
-            scroll on mobile.
-          </p>
-        </div>
-        <Link
-          href="/me/leads"
-          className="ashai-tap-target inline-flex shrink-0 items-center gap-1 rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-3.5 py-2 text-sm font-bold text-[var(--accent-teal)] hover:bg-[rgba(77,196,178,0.22)]"
-        >
-          <span>Go to Leads</span>
-          <ChevronRight className="size-4" aria-hidden="true" />
-        </Link>
       </section>
 
       {/* Time Out Confirmation Modal */}
