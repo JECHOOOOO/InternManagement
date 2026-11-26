@@ -27,9 +27,9 @@ import type {
   WorkAreaOption,
 } from "@/types/intern";
 
-const SESSION_KEY = "ashai-intern-session-v4";
-const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v4:";
-const ROSTER_KEY = "ashai-intern-cleaning-roster-v1";
+const SESSION_KEY = "ashai-intern-session-v5";
+const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v5:";
+const ROSTER_KEY = "ashai-intern-cleaning-roster-v2";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
