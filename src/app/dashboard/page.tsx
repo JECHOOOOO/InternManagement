@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
 import { useInternApp } from "@/context/InternAppContext";
+import { formatHoursMinutes } from "@/data/demoData";
 
 function isAtOrPast430Pm(): boolean {
   const now = new Date();
@@ -433,10 +434,10 @@ function DashboardContent() {
         </p>
         <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
           <span className="text-4xl font-extrabold tracking-tight text-[var(--accent-teal)]">
-            {state.totalLoggedHours.toFixed(2)}
+            {formatHoursMinutes(state.totalLoggedHours)}
           </span>
           <span className="text-sm text-[var(--text-secondary)]">
-            oras · {state.workdays.length} araw
+            · {state.workdays.length} araw
           </span>
         </div>
         <p className="mt-1.5 text-sm text-[var(--text-secondary)]">

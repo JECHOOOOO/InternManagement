@@ -50,6 +50,13 @@ export function getTodayIsoDate(): string {
   return `${y}-${m}-${d}`;
 }
 
+export function formatHoursMinutes(decimalHours: number): string {
+  const totalMinutes = Math.max(0, Math.round(decimalHours * 60));
+  const hrs = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  return `${hrs}h ${String(mins).padStart(2, "0")}m`;
+}
+
 export const CLEANERS_PER_DAY = 3;
 
 export const INITIAL_CLEANING_ROSTER: SharedCleaningRosterState = {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { formatHoursMinutes } from "@/data/demoData";
 import type { WorkdayLog } from "@/types/intern";
 
 interface OrasChartsProps {
@@ -94,7 +95,7 @@ export function OrasCharts({
             </h3>
             <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
               {selectedPoint
-                ? `${selectedPoint.label} (${selectedPoint.shortDay}): ${selectedPoint.hours.toFixed(2)} hrs`
+                ? `${selectedPoint.label} (${selectedPoint.shortDay}): ${formatHoursMinutes(selectedPoint.hours)}`
                 : "Hours logged per day (Mon–Fri)"}
             </p>
           </div>
@@ -239,9 +240,9 @@ export function OrasCharts({
                   {isSelected ? (
                     <g>
                       <rect
-                        x={Math.min(Math.max(pt.x - 24, padLeft), svgW - padRight - 48)}
+                        x={Math.min(Math.max(pt.x - 28, padLeft), svgW - padRight - 56)}
                         y={Math.max(2, pt.y - 26)}
-                        width="48"
+                        width="56"
                         height="18"
                         rx="5"
                         fill="#090c0c"
@@ -249,14 +250,14 @@ export function OrasCharts({
                         strokeWidth="1"
                       />
                       <text
-                        x={Math.min(Math.max(pt.x, padLeft + 24), svgW - padRight - 24)}
+                        x={Math.min(Math.max(pt.x, padLeft + 28), svgW - padRight - 28)}
                         y={Math.max(14, pt.y - 14)}
                         textAnchor="middle"
                         fill="#f3f6f6"
-                        fontSize="10"
+                        fontSize="9.5"
                         fontWeight="700"
                       >
-                        {pt.hours.toFixed(1)}h
+                        {formatHoursMinutes(pt.hours)}
                       </text>
                     </g>
                   ) : null}
@@ -331,12 +332,9 @@ export function OrasCharts({
             </svg>
 
             {/* Center percentage label */}
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center">
               <span className="text-lg font-extrabold leading-none text-[#4FBFB0]">
                 {completedPct}%
-              </span>
-              <span className="mt-0.5 text-[0.65rem] font-semibold text-[var(--text-muted)]">
-                {safeTarget}h
               </span>
             </div>
           </div>
@@ -351,7 +349,7 @@ export function OrasCharts({
                 <span>Completed</span>
               </div>
               <p className="mt-0.5 pl-4 text-sm font-bold text-[#4FBFB0]">
-                {completedHours.toFixed(2)} h{" "}
+                {formatHoursMinutes(completedHours)}{" "}
                 <span className="text-xs font-medium text-[var(--text-muted)]">
                   ({completedPct}%)
                 </span>
@@ -367,14 +365,14 @@ export function OrasCharts({
                 <span>Remaining</span>
               </div>
               <p className="mt-0.5 pl-4 text-sm font-bold text-[var(--text-primary)]">
-                {remainingHours.toFixed(2)} h
+                {formatHoursMinutes(remainingHours)}
               </p>
             </div>
           </div>
         </div>
 
         <p className="border-t border-[var(--border-subtle)] pt-2 text-[0.7rem] text-[var(--text-muted)]">
-          {completedHours.toFixed(2)} / {safeTarget} hrs completed
+          {formatHoursMinutes(completedHours)} / {safeTarget}h completed
         </p>
       </div>
     </div>

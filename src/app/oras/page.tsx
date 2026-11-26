@@ -12,7 +12,7 @@ import {
 import { AccessibleModal } from "@/components/AccessibleModal";
 import { OrasCharts } from "@/components/OrasCharts";
 import { useInternApp } from "@/context/InternAppContext";
-import { WORK_AREA_OPTIONS } from "@/data/demoData";
+import { formatHoursMinutes, WORK_AREA_OPTIONS } from "@/data/demoData";
 import type { WorkAreaOption, WorkdayLog } from "@/types/intern";
 
 function WorkdayCard({
@@ -88,7 +88,7 @@ function WorkdayCard({
           <div className="flex shrink-0 items-center gap-2 pt-0.5">
             {day.hoursWorked !== null ? (
               <span className="text-sm font-bold text-[var(--text-primary)]">
-                {day.hoursWorked.toFixed(2)} h
+                {formatHoursMinutes(day.hoursWorked)}
               </span>
             ) : (
               <span className="text-base font-bold text-[var(--accent-amber)]">
@@ -250,7 +250,7 @@ export default function OrasPage() {
         </h2>
         <div className="mt-2 flex flex-wrap items-baseline gap-2">
           <span className="text-4xl font-extrabold tracking-tight text-[var(--text-primary)]">
-            {state.totalLoggedHours.toFixed(2)}
+            {formatHoursMinutes(state.totalLoggedHours)}
           </span>
           <span className="text-sm text-[var(--text-secondary)]">
             sa {targetHours} oras
@@ -271,7 +271,7 @@ export default function OrasPage() {
           />
         </div>
         <p className="mt-2 text-xs font-medium text-[var(--text-secondary)]">
-          {pct}% · {remaining.toFixed(2)} oras pa.
+          {pct}% · {formatHoursMinutes(remaining)} pa.
         </p>
 
         {/* Lunch & Shift Window Rules Callout */}
