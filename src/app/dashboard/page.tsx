@@ -179,8 +179,8 @@ function DashboardContent() {
             Abiso sa telepono
           </h2>
           <p className="mt-2.5 text-sm leading-relaxed text-[var(--text-primary)]">
-            I-ON para tumunog ang telepono tuwing 4:30 PM kapag oras na ng
-            paglilinis at para sa mga mahalagang paalala — kahit sarado ang app.
+            I-ON para makatanggap ng mga paalala at abiso — kahit sarado ang
+            app.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
@@ -204,8 +204,8 @@ function DashboardContent() {
           <span className="inline-flex items-center gap-2 text-[var(--text-secondary)]">
             <Bell className="size-4 text-[var(--accent-teal)]" aria-hidden="true" />
             {state.notificationsEnabled
-              ? "Abiso sa telepono (4:30 PM paglilinis): Naka-ON (demo)"
-              : "Abiso sa telepono: Snoozed (demo)"}
+              ? "Abiso sa telepono: Naka-ON"
+              : "Abiso sa telepono: Naka-OFF"}
           </span>
           <button
             type="button"
@@ -233,8 +233,8 @@ function DashboardContent() {
             </h2>
             <p className="mt-0.5 text-[0.72rem] text-[var(--text-muted)]">
               {myDoneInCycle
-                ? `Status mo: Nakapaglinis na sa cycle na ito · Kabuuang linis: ${myTotalCleanings}`
-                : `Status mo: Hindi ka pa nakakapaglinis sa cycle na ito · Kabuuang linis: ${myTotalCleanings}`}
+                ? `Tapos na · Kabuuang linis: ${myTotalCleanings}`
+                : `Hindi pa tapos · Kabuuang linis: ${myTotalCleanings}`}
             </p>
           </div>
           {state.timedIn && isAssignedToMeToday ? (
@@ -254,8 +254,7 @@ function DashboardContent() {
               Hindi ka pa naka-time in ngayon.
             </p>
             <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">
-              Pagkatapos mong mag-time in, lalabas dito kung ikaw ang nakatask sa
-              paglilinis ngayong araw at ang 4:30 PM notification.
+              Mag-time in muna para makita ang task mo ngayong araw.
             </p>
             <Link
               href="/oras"
@@ -270,9 +269,7 @@ function DashboardContent() {
               Wala kang nakatask na paglilinis ngayong araw.
             </p>
             <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">
-              {myDoneInCycle
-                ? "Nakapaglinis ka na sa cycle na ito. Awtomatikong mag-aabiso ulit ang system kapag turn mo na sa susunod na cycle."
-                : "Hindi ka pa nakakapaglinis sa cycle na ito. Awtomatikong mag-aabiso ang system kapag ikaw na ang nakatask."}
+              Mag-aabiso ang system kapag ikaw na ang nakatask.
             </p>
           </div>
         ) : (
@@ -283,14 +280,9 @@ function DashboardContent() {
                 Ikaw ang nakatask ngayon sa paglilinis
               </p>
               <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
-                Naka-time in ka simula{" "}
-                <strong className="text-[var(--text-primary)]">
-                  {state.activeShiftStartLabel}
-                </strong>
-                . Pagdating ng{" "}
-                <strong className="text-[var(--accent-teal)]">4:30 PM</strong>,
-                magpapadala ng abiso para simulan ang paglilinis at kumuha ng
-                picture ng output.
+                May abiso pagdating ng{" "}
+                <strong className="text-[var(--accent-teal)]">4:30 PM</strong>{" "}
+                para magsimula at mag-submit ng picture.
               </p>
             </div>
 
@@ -310,8 +302,7 @@ function DashboardContent() {
                       4:30 PM — Simulan mo na maglinis
                     </p>
                     <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-secondary)]">
-                      Pagkatapos maglinis, kumuha ng picture ng output ng
-                      paglilinis bilang patunay.
+                      Kumuha ng picture ng output pagkatapos maglinis.
                     </p>
                   </div>
                 </div>
@@ -424,7 +415,7 @@ function DashboardContent() {
                         type="text"
                         value={cleaningNote}
                         onChange={(e) => setCleaningNote(e.target.value)}
-                        placeholder="e.g. Tapos na ang paglilinis sa buong area"
+                        placeholder="Maikling tala..."
                         className="ashai-control"
                       />
                     </div>
@@ -441,7 +432,8 @@ function DashboardContent() {
             ) : (
               <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card-inner)] px-3.5 py-2.5 text-xs text-[var(--text-muted)]">
                 <span>
-                  Naghihintay ng <strong className="text-[var(--text-primary)]">4:30 PM</strong> notification para magsimula ng paglilinis.
+                  Abiso sa paglilinis:{" "}
+                  <strong className="text-[var(--text-primary)]">4:30 PM</strong>
                 </span>
               </div>
             )}

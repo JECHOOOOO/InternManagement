@@ -284,17 +284,11 @@ export default function OrasPage() {
               <strong className="font-semibold text-[#e8c584]">
                 12:00–1:00 ay pahinga
               </strong>{" "}
-              — hindi ito binibilang sa oras mo, at hindi mo na kailangang
-              mag-time out. Awtomatiko itong ibinabawas.{" "}
+              — awtomatikong ibinabawas, hindi kailangang mag-time out.{" "}
               <strong className="font-semibold text-[#e8c584]">
-                8:00 hanggang 5:00 lang ang binibilang
+                8:00–5:00 lang ang binibilang
               </strong>{" "}
-              — ang pumasok bago mag-8 ay nabibilang mula 8:00, at ang lampas ng
-              5:00 ay hindi na.
-            </p>
-            <p className="mt-1.5 text-[0.72rem] text-[#9c8254]">
-              Demo display copy from screenshots — official cut-off rules live
-              in Ashai backend.
+              sa oras ng duty.
             </p>
           </div>
         </div>

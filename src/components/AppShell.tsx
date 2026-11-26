@@ -386,7 +386,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Subtle Desktop Top Utility Strip */}
         <header className="hidden border-b border-[var(--border-subtle)] bg-[var(--bg-header)]/80 px-6 py-3 md:flex md:items-center md:justify-between">
           <p className="text-xs font-medium text-[var(--text-muted)]">
-            Intern workspace · Responsive mobile-first rebuild (Demo data)
+            Intern workspace
           </p>
           <button
             type="button"
