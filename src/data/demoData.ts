@@ -50,14 +50,13 @@ export function getTodayIsoDate(): string {
   return `${y}-${m}-${d}`;
 }
 
+export const CLEANERS_PER_DAY = 3;
+
 export const INITIAL_CLEANING_ROSTER: SharedCleaningRosterState = {
   dayNumber: 1,
   lastCalendarDate: "2026-11-26",
-  cycleNumber: 1,
-  assignedAccountId: "acc-jericho",
-  completedToday: false,
-  completedNote: "",
-  completedInCurrentCycle: [],
+  assignedAccountIds: ["acc-jericho", "acc-franz", "acc-jeffry"],
+  completedTodayByAccount: {},
   totalCleaningsByAccount: {
     "acc-jericho": 0,
     "acc-franz": 0,
@@ -450,7 +449,8 @@ export function createInitialStateForAccount(
     },
     cleaningRoster: {
       ...INITIAL_CLEANING_ROSTER,
-      completedInCurrentCycle: [...INITIAL_CLEANING_ROSTER.completedInCurrentCycle],
+      assignedAccountIds: [...INITIAL_CLEANING_ROSTER.assignedAccountIds],
+      completedTodayByAccount: {},
       totalCleaningsByAccount: {
         ...INITIAL_CLEANING_ROSTER.totalCleaningsByAccount,
       },

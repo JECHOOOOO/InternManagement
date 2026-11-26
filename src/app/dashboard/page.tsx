@@ -30,7 +30,6 @@ function DashboardContent() {
     triggerCleaningReminder430,
     submitCleaningProof,
     clearCleaningProof,
-    advanceCleaningDay,
     announce,
   } = useInternApp();
 
@@ -50,15 +49,13 @@ function DashboardContent() {
     },
   ]);
 
-  const isAssignedToMeToday =
-    state.cleaningRoster.assignedAccountId === state.accountId;
-  const myTotalCleanings =
-    state.cleaningRoster.totalCleaningsByAccount[state.accountId] ?? 0;
-  const myDoneInCycle = state.cleaningRoster.completedInCurrentCycle.includes(
+  const isAssignedToMeToday = state.cleaningRoster.assignedAccountIds.includes(
     state.accountId
   );
+  const myProofToday =
+    state.cleaningRoster.completedTodayByAccount[state.accountId];
 
-  // Automatically trigger the 4:30 PM cleaning notification ONLY for the intern assigned today
+  // Automatically trigger the 4:30 PM cleaning notification ONLY for the interns assigned today
   useEffect(() => {
     if (!state.timedIn || !isAssignedToMeToday) return;
     const checkTime = () => {
@@ -79,8 +76,7 @@ function DashboardContent() {
   const show430Notif =
     state.timedIn &&
     isAssignedToMeToday &&
-    (state.cleaningDuty.reminderTriggeredAt430 ||
-      state.cleaningRoster.completedToday);
+    (state.cleaningDuty.reminderTriggeredAt430 || Boolean(myProofToday));
 
   const handleCleaningPhotoSelect = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -224,19 +220,12 @@ function DashboardContent() {
         className="ashai-card rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4"
       >
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
-          <div>
-            <h2
-              id="trabaho-mo-heading"
-              className="text-xs font-bold tracking-[0.14em] text-[var(--text-muted)] uppercase"
-            >
-              Ang trabaho mo · Paglilinis
-            </h2>
-            <p className="mt-0.5 text-[0.72rem] text-[var(--text-muted)]">
-              {myDoneInCycle
-                ? `Tapos na · Kabuuang linis: ${myTotalCleanings}`
-                : `Hindi pa tapos · Kabuuang linis: ${myTotalCleanings}`}
-            </p>
-          </div>
+          <h2
+            id="trabaho-mo-heading"
+            className="text-xs font-bold tracking-[0.14em] text-[var(--text-muted)] uppercase"
+          >
+            Ang trabaho mo · Paglilinis
+          </h2>
           {state.timedIn && isAssignedToMeToday ? (
             <button
               type="button"
@@ -307,14 +296,13 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                {state.cleaningRoster.completedToday &&
-                state.cleaningRoster.completedPhotoDataUrl ? (
+                {myProofToday ? (
                   <div className="space-y-3 rounded-xl border border-[var(--border-teal)] bg-[var(--bg-card)] p-3.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[var(--accent-teal)]">
                         <CheckCircle2 className="size-4" aria-hidden="true" />
                         Tapos na ang paglilinis · Submitted{" "}
-                        {state.cleaningRoster.completedAtLabel}
+                        {myProofToday.completedAtLabel}
                       </span>
                       <button
                         type="button"
@@ -327,25 +315,15 @@ function DashboardContent() {
                     </div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={state.cleaningRoster.completedPhotoDataUrl}
+                      src={myProofToday.photoDataUrl}
                       alt="Submitted cleaning output photo"
                       className="max-h-64 w-full rounded-xl border border-[var(--border-subtle)] object-cover"
                     />
-                    {state.cleaningRoster.completedNote ? (
+                    {myProofToday.note ? (
                       <p className="text-xs text-[var(--text-secondary)]">
-                        Tala: {state.cleaningRoster.completedNote}
+                        Tala: {myProofToday.note}
                       </p>
                     ) : null}
-
-                    <div className="border-t border-[var(--border-subtle)] pt-3">
-                      <button
-                        type="button"
-                        onClick={() => advanceCleaningDay()}
-                        className="ashai-tap-target w-full rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-3.5 py-2 text-xs font-bold text-[var(--accent-teal)] transition hover:bg-[rgba(77,196,178,0.22)]"
-                      >
-                        Simulan ang Susunod na Araw (Demo Roll)
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <form

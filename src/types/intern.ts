@@ -73,17 +73,21 @@ export interface CleaningDutyState {
   reminderTriggeredAt430: boolean;
 }
 
+export interface CleaningProofRecord {
+  completedAtLabel: string;
+  photoDataUrl: string;
+  photoFileName: string;
+  note: string;
+}
+
 export interface SharedCleaningRosterState {
   dayNumber: number;
   lastCalendarDate: string;
-  cycleNumber: number;
-  assignedAccountId: string;
-  completedToday: boolean;
-  completedAtLabel?: string;
-  completedPhotoDataUrl?: string;
-  completedPhotoFileName?: string;
-  completedNote: string;
-  completedInCurrentCycle: string[];
+  /** Up to 3 intern account IDs assigned to clean today */
+  assignedAccountIds: string[];
+  /** Per-account proof submitted today, keyed by accountId */
+  completedTodayByAccount: Record<string, CleaningProofRecord>;
+  /** Silent per-account total cleaning count (strict 1-1-1 before 2-2-2 before 3-3-3) */
   totalCleaningsByAccount: Record<string, number>;
 }
 

@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  CLEANERS_PER_DAY,
   createInitialStateForAccount,
   DEMO_ACCOUNTS,
   getTodayIsoDate,
@@ -29,99 +30,105 @@ import type {
 
 const SESSION_KEY = "ashai-intern-session-v5";
 const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v5:";
-const ROSTER_KEY = "ashai-intern-cleaning-roster-v2";
+const ROSTER_KEY = "ashai-intern-cleaning-roster-v3";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
 let clientCachedState: DemoAppState | null = null;
 
-function pickNextUnassignedAccountId(
-  currentAssignedId: string,
-  completedInCycle: string[]
-): { nextAccountId: string; resetCycle: boolean } {
-  const remaining = DEMO_ACCOUNTS.filter(
-    (acc) => !completedInCycle.includes(acc.id)
+/**
+ * Picks up to 3 interns for the next cleaning day using strict level-by-level fairness:
+ * - Finds the minimum cleaning count across all interns (e.g., 0 during the 1-1-1 round, 1 during 2-2-2, etc.).
+ * - Selects up to CLEANERS_PER_DAY (3) interns who are still at that minimum count.
+ * - Guarantees NO intern ever gets assigned for count k+1 while ANY intern is still at count k.
+ */
+function pickNextBatchAccountIds(
+  totalCleaningsByAccount: Record<string, number>
+): string[] {
+  const counts = DEMO_ACCOUNTS.map(
+    (acc) => totalCleaningsByAccount[acc.id] ?? 0
   );
-  if (remaining.length > 0) {
-    const currentIdx = DEMO_ACCOUNTS.findIndex((a) => a.id === currentAssignedId);
-    for (let step = 1; step <= DEMO_ACCOUNTS.length; step++) {
-      const candidate =
-        DEMO_ACCOUNTS[(currentIdx + step) % DEMO_ACCOUNTS.length];
-      if (!completedInCycle.includes(candidate.id)) {
-        return { nextAccountId: candidate.id, resetCycle: false };
-      }
-    }
-    return { nextAccountId: remaining[0].id, resetCycle: false };
-  }
-  // All interns completed this cycle -> start fresh cycle from first account
-  return { nextAccountId: DEMO_ACCOUNTS[0].id, resetCycle: true };
+  const minCount = Math.min(...counts);
+  const eligible = DEMO_ACCOUNTS.filter(
+    (acc) => (totalCleaningsByAccount[acc.id] ?? 0) === minCount
+  );
+  return eligible.slice(0, CLEANERS_PER_DAY).map((acc) => acc.id);
+}
+
+function areAllAssignedDone(roster: SharedCleaningRosterState): boolean {
+  return (
+    roster.assignedAccountIds.length > 0 &&
+    roster.assignedAccountIds.every((id) =>
+      Boolean(roster.completedTodayByAccount[id])
+    )
+  );
 }
 
 function normalizeRoster(
   parsed?: Partial<SharedCleaningRosterState>
 ): SharedCleaningRosterState {
   const todayIso = getTodayIsoDate();
+  const baseCounts: Record<string, number> = {
+    ...INITIAL_CLEANING_ROSTER.totalCleaningsByAccount,
+  };
   const base: SharedCleaningRosterState = {
-    ...INITIAL_CLEANING_ROSTER,
+    dayNumber: INITIAL_CLEANING_ROSTER.dayNumber,
     lastCalendarDate: todayIso,
-    completedInCurrentCycle: [...INITIAL_CLEANING_ROSTER.completedInCurrentCycle],
-    totalCleaningsByAccount: {
-      ...INITIAL_CLEANING_ROSTER.totalCleaningsByAccount,
-    },
+    assignedAccountIds: [...INITIAL_CLEANING_ROSTER.assignedAccountIds],
+    completedTodayByAccount: {},
+    totalCleaningsByAccount: baseCounts,
   };
   if (!parsed) return base;
 
-  const validAssigned = DEMO_ACCOUNTS.some(
-    (a) => a.id === parsed.assignedAccountId
-  )
-    ? (parsed.assignedAccountId as string)
-    : base.assignedAccountId;
+  const validCounts: Record<string, number> = { ...baseCounts };
+  if (parsed.totalCleaningsByAccount) {
+    for (const acc of DEMO_ACCOUNTS) {
+      const val = parsed.totalCleaningsByAccount[acc.id];
+      if (typeof val === "number" && val >= 0) {
+        validCounts[acc.id] = val;
+      }
+    }
+  }
+
+  const validAssigned = Array.isArray(parsed.assignedAccountIds)
+    ? parsed.assignedAccountIds.filter((id) =>
+        DEMO_ACCOUNTS.some((acc) => acc.id === id)
+      )
+    : [];
 
   const merged: SharedCleaningRosterState = {
-    dayNumber: typeof parsed.dayNumber === "number" ? parsed.dayNumber : base.dayNumber,
+    dayNumber:
+      typeof parsed.dayNumber === "number" ? parsed.dayNumber : base.dayNumber,
     lastCalendarDate:
       typeof parsed.lastCalendarDate === "string"
         ? parsed.lastCalendarDate
         : todayIso,
-    cycleNumber:
-      typeof parsed.cycleNumber === "number" ? parsed.cycleNumber : base.cycleNumber,
-    assignedAccountId: validAssigned,
-    completedToday: Boolean(parsed.completedToday),
-    completedAtLabel: parsed.completedAtLabel,
-    completedPhotoDataUrl: parsed.completedPhotoDataUrl,
-    completedPhotoFileName: parsed.completedPhotoFileName,
-    completedNote: typeof parsed.completedNote === "string" ? parsed.completedNote : "",
-    completedInCurrentCycle: Array.isArray(parsed.completedInCurrentCycle)
-      ? parsed.completedInCurrentCycle
-      : [],
-    totalCleaningsByAccount: {
-      ...base.totalCleaningsByAccount,
-      ...(parsed.totalCleaningsByAccount ?? {}),
-    },
+    assignedAccountIds:
+      validAssigned.length > 0
+        ? validAssigned
+        : pickNextBatchAccountIds(validCounts),
+    completedTodayByAccount:
+      parsed.completedTodayByAccount &&
+      typeof parsed.completedTodayByAccount === "object"
+        ? parsed.completedTodayByAccount
+        : {},
+    totalCleaningsByAccount: validCounts,
   };
 
-  // Automatic real-day roll ONLY if yesterday's assigned intern actually completed cleaning
+  // Automatic real-day roll ONLY if all assigned interns for yesterday completed cleaning
   if (merged.lastCalendarDate !== todayIso) {
-    if (merged.completedToday) {
-      const { nextAccountId, resetCycle } = pickNextUnassignedAccountId(
-        merged.assignedAccountId,
-        merged.completedInCurrentCycle
-      );
+    if (areAllAssignedDone(merged)) {
       return {
         ...merged,
         dayNumber: merged.dayNumber + 1,
         lastCalendarDate: todayIso,
-        cycleNumber: resetCycle ? merged.cycleNumber + 1 : merged.cycleNumber,
-        assignedAccountId: nextAccountId,
-        completedToday: false,
-        completedAtLabel: undefined,
-        completedPhotoDataUrl: undefined,
-        completedPhotoFileName: undefined,
-        completedNote: "",
-        completedInCurrentCycle: resetCycle ? [] : merged.completedInCurrentCycle,
+        assignedAccountIds: pickNextBatchAccountIds(
+          merged.totalCleaningsByAccount
+        ),
+        completedTodayByAccount: {},
       };
     }
-    // If not completed, keep the same intern assigned until they finish!
+    // Keep unfinished interns assigned until they complete their cleaning
     return {
       ...merged,
       lastCalendarDate: todayIso,
@@ -599,15 +606,12 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
     (photoDataUrl: string, photoFileName: string, note: string) => {
       const submittedAtLabel = formatCurrentTimeLabel();
       updateStore((prev) => {
-        if (prev.cleaningRoster.assignedAccountId !== prev.accountId) {
+        if (!prev.cleaningRoster.assignedAccountIds.includes(prev.accountId)) {
           return prev;
         }
-        const alreadyCountedToday = prev.cleaningRoster.completedToday;
-        const nextCycleList = prev.cleaningRoster.completedInCurrentCycle.includes(
-          prev.accountId
-        )
-          ? prev.cleaningRoster.completedInCurrentCycle
-          : [...prev.cleaningRoster.completedInCurrentCycle, prev.accountId];
+        const alreadyDoneToday = Boolean(
+          prev.cleaningRoster.completedTodayByAccount[prev.accountId]
+        );
         const prevCount =
           prev.cleaningRoster.totalCleaningsByAccount[prev.accountId] ?? 0;
 
@@ -619,15 +623,18 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
           },
           cleaningRoster: {
             ...prev.cleaningRoster,
-            completedToday: true,
-            completedAtLabel: submittedAtLabel,
-            completedPhotoDataUrl: photoDataUrl,
-            completedPhotoFileName: photoFileName,
-            completedNote: note.trim(),
-            completedInCurrentCycle: nextCycleList,
+            completedTodayByAccount: {
+              ...prev.cleaningRoster.completedTodayByAccount,
+              [prev.accountId]: {
+                completedAtLabel: submittedAtLabel,
+                photoDataUrl,
+                photoFileName,
+                note: note.trim(),
+              },
+            },
             totalCleaningsByAccount: {
               ...prev.cleaningRoster.totalCleaningsByAccount,
-              [prev.accountId]: alreadyCountedToday ? prevCount : prevCount + 1,
+              [prev.accountId]: alreadyDoneToday ? prevCount : prevCount + 1,
             },
           },
         };
@@ -639,31 +646,25 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
 
   const clearCleaningProof = useCallback(() => {
     updateStore((prev) => {
-      if (prev.cleaningRoster.assignedAccountId !== prev.accountId) {
+      if (!prev.cleaningRoster.assignedAccountIds.includes(prev.accountId)) {
         return prev;
       }
-      const wasCompleted = prev.cleaningRoster.completedToday;
+      const wasDone = Boolean(
+        prev.cleaningRoster.completedTodayByAccount[prev.accountId]
+      );
+      const nextCompleted = { ...prev.cleaningRoster.completedTodayByAccount };
+      delete nextCompleted[prev.accountId];
       const prevCount =
         prev.cleaningRoster.totalCleaningsByAccount[prev.accountId] ?? 0;
+
       return {
         ...prev,
         cleaningRoster: {
           ...prev.cleaningRoster,
-          completedToday: false,
-          completedAtLabel: undefined,
-          completedPhotoDataUrl: undefined,
-          completedPhotoFileName: undefined,
-          completedNote: "",
-          completedInCurrentCycle: wasCompleted
-            ? prev.cleaningRoster.completedInCurrentCycle.filter(
-                (id) => id !== prev.accountId
-              )
-            : prev.cleaningRoster.completedInCurrentCycle,
+          completedTodayByAccount: nextCompleted,
           totalCleaningsByAccount: {
             ...prev.cleaningRoster.totalCleaningsByAccount,
-            [prev.accountId]: wasCompleted
-              ? Math.max(0, prevCount - 1)
-              : prevCount,
+            [prev.accountId]: wasDone ? Math.max(0, prevCount - 1) : prevCount,
           },
         },
       };
@@ -674,16 +675,15 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
   const advanceCleaningDay = useCallback((): { ok: boolean; reason?: string } => {
     const current = readSnapshot();
     const roster = current.cleaningRoster;
-    if (!roster.completedToday) {
+    if (!areAllAssignedDone(roster)) {
       const reason =
-        "Hindi pa pwedeng umusad sa susunod na araw — hindi pa natatapos ang paglilinis ngayong araw.";
+        "Hindi pa pwedeng umusad — hindi pa tapos ang lahat ng nakatask sa paglilinis ngayong araw.";
       announce(reason);
       return { ok: false, reason };
     }
 
-    const { nextAccountId, resetCycle } = pickNextUnassignedAccountId(
-      roster.assignedAccountId,
-      roster.completedInCurrentCycle
+    const nextAssignedIds = pickNextBatchAccountIds(
+      roster.totalCleaningsByAccount
     );
 
     updateStore((prev) => ({
@@ -694,24 +694,12 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
       cleaningRoster: {
         ...prev.cleaningRoster,
         dayNumber: prev.cleaningRoster.dayNumber + 1,
-        cycleNumber: resetCycle
-          ? prev.cleaningRoster.cycleNumber + 1
-          : prev.cleaningRoster.cycleNumber,
-        assignedAccountId: nextAccountId,
-        completedToday: false,
-        completedAtLabel: undefined,
-        completedPhotoDataUrl: undefined,
-        completedPhotoFileName: undefined,
-        completedNote: "",
-        completedInCurrentCycle: resetCycle
-          ? []
-          : prev.cleaningRoster.completedInCurrentCycle,
+        assignedAccountIds: nextAssignedIds,
+        completedTodayByAccount: {},
       },
     }));
 
-    announce(
-      "Nag-roll na sa susunod na araw — awtomatikong na-assign ang susunod na intern sa loob ng system."
-    );
+    announce("Nag-roll na sa susunod na araw sa loob ng system.");
     return { ok: true };
   }, [announce]);
 

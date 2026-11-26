@@ -35,8 +35,14 @@ const NAV_ITEMS: {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { state, liveMessage, signInWithCredentials, signOut, resetDemoData } =
-    useInternApp();
+  const {
+    state,
+    liveMessage,
+    signInWithCredentials,
+    signOut,
+    advanceCleaningDay,
+    resetDemoData,
+  } = useInternApp();
   const [searchOpen, setSearchOpen] = useState(false);
   const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -553,6 +559,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             </li>
           </ul>
           <div className="flex flex-wrap gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                advanceCleaningDay();
+                setDemoNoticeOpen(false);
+              }}
+              className="ashai-tap-target rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-4 py-2 text-sm font-semibold text-[var(--accent-teal)] hover:bg-[rgba(77,196,178,0.22)]"
+            >
+              Simulate Next Day
+            </button>
             <button
               type="button"
               onClick={() => {
