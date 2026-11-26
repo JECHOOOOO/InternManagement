@@ -112,51 +112,53 @@ body {
 }
 
 /* Native inputs, selects, textareas sized for comfortable mobile touch & no iOS zoom */
-.ashai-control {
-  font: inherit;
-  font-size: max(1rem, 1em);
-  line-height: 1.4;
-  min-block-size: 48px;
-  inline-size: 100%;
-  border-radius: 0.75rem;
-  border: 1px solid var(--border-control);
-  background-color: var(--bg-input);
-  color: var(--text-primary);
-  padding-inline: 0.9rem;
-  padding-block: 0.65rem;
-  transition: border-color 150ms ease, background-color 150ms ease;
-}
+@layer components {
+  .ashai-control {
+    font: inherit;
+    font-size: max(1rem, 1em);
+    line-height: 1.4;
+    min-block-size: 48px;
+    inline-size: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-control);
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    padding-inline: 0.9rem;
+    padding-block: 0.65rem;
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
 
-.ashai-control::placeholder {
-  color: var(--text-muted);
-  opacity: 1;
-}
+  .ashai-control::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+  }
 
-.ashai-control:hover {
-  border-color: #778a8a;
-}
+  .ashai-control:hover {
+    border-color: #778a8a;
+  }
 
-textarea.ashai-control {
-  min-block-size: 6.5rem;
-  resize: vertical;
-}
+  textarea.ashai-control {
+    min-block-size: 6.5rem;
+    resize: vertical;
+  }
 
-select.ashai-control {
-  appearance: none;
-  padding-inline-end: 2.5rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c1cccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.85rem center;
-}
+  select.ashai-control {
+    appearance: none;
+    padding-inline-end: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c1cccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+  }
 
-.ashai-control:is(:user-invalid, .user-invalid-fallback) {
-  border-color: var(--accent-danger);
-  background-color: #170d0d;
-}
+  .ashai-control:is(:user-invalid, .user-invalid-fallback) {
+    border-color: var(--accent-danger);
+    background-color: #170d0d;
+  }
 
-.ashai-tap-target {
-  min-block-size: 48px;
-  min-inline-size: 48px;
+  .ashai-tap-target {
+    min-block-size: 48px;
+    min-inline-size: 48px;
+  }
 }
 
 /* Native <dialog> modal scroll containment */
