@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import {
+  ArrowLeftToLine,
+  ArrowRightFromLine,
   Box,
-  ChevronDown,
   ClipboardList,
   Clock,
   Eye,
@@ -51,6 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarQuery, setSidebarQuery] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [prepareOpen, setPrepareOpen] = useState(true);
   const [stockBuyingOpen, setStockBuyingOpen] = useState(true);
   const [loginUsername, setLoginUsername] = useState("");
@@ -69,7 +71,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const sidebarFilter = sidebarQuery.trim().toLowerCase();
   const desktopPrimaryLinks = [
-    { href: "/dashboard" as NavRoute, label: "Home" },
     { href: "/oras" as NavRoute, label: "Oras at reports" },
     { href: "/me/leads" as NavRoute, label: "Leads" },
     { href: "/request" as NavRoute, label: "Request" },
@@ -290,244 +291,301 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh bg-[var(--bg-canvas)] text-[var(--text-primary)] md:grid md:grid-cols-[15.5rem_1fr]">
+    <div
+      className={`min-h-dvh bg-[var(--bg-canvas)] text-[var(--text-primary)] md:grid ${
+        sidebarCollapsed
+          ? "md:grid-cols-[4rem_1fr]"
+          : "md:grid-cols-[16.5rem_1fr]"
+      }`}
+    >
       <a href="#main-content" className="skip-link visually-hidden">
         Skip to main content
       </a>
 
-      {/* Desktop Left Sidebar */}
-      <aside className="hidden border-r border-[var(--border-subtle)] bg-[var(--bg-header)] md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:justify-between md:px-4 md:py-4">
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center justify-between gap-2">
-            <Link
-              href="/dashboard"
-              aria-label="Ashai Apparel Smart Hub Home"
-              className="inline-flex items-center rounded-xl px-1 py-0.5"
-            >
-              <Image
-                src="/ashai-logo.png"
-                alt="Ashai Apparel Smart Hub"
-                width={172}
-                height={43}
-                priority
-                className="block h-9 w-auto select-none"
-              />
-            </Link>
+      {/* Desktop Left Sidebar (Exact Ashai Mint-Sage Sidebar) */}
+      <aside className="hidden border-r border-[#bfd4ce] bg-[#d9e8e4] text-[#1f2e2b] md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:justify-between">
+        {sidebarCollapsed ? (
+          <div className="flex h-full flex-col items-center justify-between py-4">
             <button
               type="button"
-              onClick={() => setDemoNoticeOpen(true)}
-              title="Demo mode info"
-              className="rounded-full border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-2 py-0.5 text-[0.65rem] font-bold tracking-wide text-[var(--accent-teal)] uppercase hover:bg-[rgba(77,196,178,0.22)]"
+              onClick={() => setSidebarCollapsed(false)}
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+              className="inline-flex size-10 items-center justify-center rounded-xl text-[#4f6560] transition hover:bg-[#c6dad5] hover:text-[#07100e]"
             >
-              Demo
+              <ArrowRightFromLine className="size-5" aria-hidden="true" />
             </button>
-          </div>
 
-          {/* Sidebar Search */}
-          <div className="relative mt-3.5">
-            <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[var(--text-muted)]"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={sidebarQuery}
-              onChange={(e) => setSidebarQuery(e.target.value)}
-              placeholder="Search (e.g. mass cut)"
-              aria-label="Search sidebar menu"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck={false}
-              className="w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] py-2 pr-3 pl-9 text-xs text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--accent-teal)]"
-            />
-          </div>
-
-          <div className="mt-2 flex justify-end">
-            <button
-              type="button"
-              onClick={() => {
-                const next = !allSidebarExpanded;
-                setPrepareOpen(next);
-                setStockBuyingOpen(next);
-              }}
-              className="text-[0.72rem] font-semibold text-[var(--text-muted)] transition hover:text-[var(--accent-teal)]"
-            >
-              {allSidebarExpanded ? "Collapse all" : "Expand all"}
-            </button>
-          </div>
-
-          <nav
-            aria-label="Primary"
-            className="mt-2 min-h-0 flex-1 space-y-4 overflow-y-auto pr-0.5"
-          >
-            {/* Primary Links */}
-            <ul className="space-y-1">
-              {desktopPrimaryLinks.map((item) => {
+            <nav aria-label="Primary collapsed" className="space-y-2">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
                 const isActive = activeHref === item.href;
                 return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={isActive ? "page" : undefined}
-                      className={`nav-item flex min-h-10 items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
-                        isActive
-                          ? "bg-[var(--accent-teal-soft)] font-bold text-[var(--accent-teal)]"
-                          : "font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
-                      }`}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={`size-1.5 shrink-0 rounded-full ${
-                          isActive
-                            ? "bg-[var(--accent-teal)]"
-                            : "bg-[var(--text-muted)]/60"
-                        }`}
-                      />
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  </li>
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={item.label}
+                    aria-label={item.label}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`flex size-10 items-center justify-center rounded-xl transition ${
+                      isActive
+                        ? "bg-[#bdd3cd] text-[#0e7c6b]"
+                        : "text-[#4f6560] hover:bg-[#c6dad5] hover:text-[#07100e]"
+                    }`}
+                  >
+                    <Icon className="size-5" aria-hidden="true" />
+                  </Link>
                 );
               })}
-            </ul>
-
-            {/* PREPARE Section */}
-            {prepareLinks.length > 0 ? (
-              <div>
-                <button
-                  type="button"
-                  aria-expanded={prepareOpen}
-                  onClick={() => setPrepareOpen((prev) => !prev)}
-                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.7rem] font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase transition hover:text-[var(--text-primary)]"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <ClipboardList
-                      className="size-3.5 text-[var(--accent-teal)]"
-                      aria-hidden="true"
-                    />
-                    <span>Prepare</span>
-                  </span>
-                  <ChevronDown
-                    className={`size-3.5 transition-transform ${
-                      prepareOpen ? "rotate-0" : "-rotate-90"
-                    }`}
-                    aria-hidden="true"
-                  />
-                </button>
-                {prepareOpen ? (
-                  <ul className="mt-1 space-y-1">
-                    {prepareLinks.map((item) => (
-                      <li key={item.label}>
-                        <Link
-                          href={item.href}
-                          className="flex min-h-9 items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
-                        >
-                          <span className="inline-flex items-center gap-3 truncate">
-                            <span
-                              aria-hidden="true"
-                              className="size-1.5 shrink-0 rounded-full bg-[var(--accent-teal)]"
-                            />
-                            <span className="truncate">{item.label}</span>
-                          </span>
-                          <span className="rounded-full bg-[var(--bg-pill)] px-2 py-0.5 text-[0.68rem] font-semibold text-[var(--text-secondary)]">
-                            {item.badge}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            ) : null}
-
-            {/* STOCK & BUYING Section */}
-            {stockBuyingLinks.length > 0 ? (
-              <div>
-                <button
-                  type="button"
-                  aria-expanded={stockBuyingOpen}
-                  onClick={() => setStockBuyingOpen((prev) => !prev)}
-                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.7rem] font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase transition hover:text-[var(--text-primary)]"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <Box
-                      className="size-3.5 text-[var(--accent-teal)]"
-                      aria-hidden="true"
-                    />
-                    <span>Stock &amp; Buying</span>
-                  </span>
-                  <ChevronDown
-                    className={`size-3.5 transition-transform ${
-                      stockBuyingOpen ? "rotate-0" : "-rotate-90"
-                    }`}
-                    aria-hidden="true"
-                  />
-                </button>
-                {stockBuyingOpen ? (
-                  <ul className="mt-1 space-y-1">
-                    {stockBuyingLinks.map((item) => (
-                      <li key={item.label}>
-                        <Link
-                          href={item.href}
-                          className="flex min-h-9 items-center gap-3 rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
-                        >
-                          <span
-                            aria-hidden="true"
-                            className="size-1.5 shrink-0 rounded-full bg-[var(--text-muted)]/60"
-                          />
-                          <span className="truncate">{item.label}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            ) : null}
-          </nav>
-        </div>
-
-        <div className="space-y-2 border-t border-[var(--border-subtle)] pt-3">
-          <div className="flex items-center justify-between gap-2.5 px-1 pt-0.5">
-            <div className="flex min-w-0 items-center gap-2.5">
-              {state.profile.avatarDataUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={state.profile.avatarDataUrl}
-                  alt={`${state.profile.fullName} avatar`}
-                  className="size-9 shrink-0 rounded-full border border-[var(--border-teal)] object-cover"
-                />
-              ) : (
-                <div
-                  aria-hidden="true"
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-pill)] text-xs font-extrabold text-[var(--text-primary)]"
-                >
-                  {state.profile.initials}
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold leading-tight text-[var(--text-primary)]">
-                  {state.profile.fullName}
-                </p>
-                <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                  {state.profile.roleLabel}
-                </p>
-              </div>
-            </div>
+            </nav>
 
             <button
               type="button"
               onClick={signOut}
               aria-label="Sign out"
               title="Sign out"
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] transition hover:bg-[var(--accent-danger-soft)] hover:text-[var(--accent-danger)]"
+              className="inline-flex size-10 items-center justify-center rounded-xl text-[#5c726d] transition hover:bg-[#c6dad5] hover:text-[#b91c1c]"
             >
               <Power className="size-4.5" aria-hidden="true" />
             </button>
           </div>
+        ) : (
+          <>
+            <div className="flex min-h-0 flex-1 flex-col px-4 pt-4 pb-3">
+              {/* Top Logo + Collapse Sidebar Arrow */}
+              <div className="flex items-start justify-between gap-2">
+                <Link
+                  href="/dashboard"
+                  aria-label="Ashai Apparel Smart Hub Home"
+                  className="block rounded-lg px-0.5 py-0.5"
+                >
+                  <span className="block text-[1.85rem] font-black leading-none tracking-[-0.03em]">
+                    <span className="text-[#07100e]">ash</span>
+                    <span className="text-[#0e7c6b]">ai</span>
+                  </span>
+                  <span className="mt-1.5 block text-[0.62rem] font-semibold tracking-[0.22em] text-[#5d736e] uppercase">
+                    Apparel Smart Hub
+                  </span>
+                </Link>
 
-          <p className="text-center text-[0.7rem] text-[var(--text-muted)]">
-            {APP_BUILD_TAG}
-          </p>
-        </div>
+                <button
+                  type="button"
+                  onClick={() => setSidebarCollapsed(true)}
+                  aria-label="Collapse sidebar"
+                  title="Collapse sidebar"
+                  className="mt-1 inline-flex size-8 items-center justify-center rounded-lg text-[#5a726c] transition hover:bg-[#c6dad5] hover:text-[#07100e]"
+                >
+                  <ArrowLeftToLine className="size-4.5" aria-hidden="true" />
+                </button>
+              </div>
+
+              {/* Sidebar Search */}
+              <div className="relative mt-4">
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[#6b817c]"
+                  aria-hidden="true"
+                />
+                <input
+                  type="search"
+                  value={sidebarQuery}
+                  onChange={(e) => setSidebarQuery(e.target.value)}
+                  placeholder="Search (e.g. mass cut)"
+                  aria-label="Search sidebar menu"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  className="w-full rounded-xl border border-[#bed3cd] bg-[#cfe0dc] py-2.5 pr-3 pl-10 text-sm text-[#172623] outline-none transition placeholder:text-[#6e847f] focus:border-[#0e7c6b]"
+                />
+              </div>
+
+              {/* Collapse all / Expand all */}
+              <div className="mt-2.5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !allSidebarExpanded;
+                    setPrepareOpen(next);
+                    setStockBuyingOpen(next);
+                  }}
+                  className="text-xs font-semibold text-[#5d746f] transition hover:text-[#0e7c6b]"
+                >
+                  {allSidebarExpanded ? "Collapse all" : "Expand all"}
+                </button>
+              </div>
+
+              {/* Nav Items + Prepare + Stock & Buying */}
+              <nav
+                aria-label="Primary"
+                className="mt-2 min-h-0 flex-1 space-y-5 overflow-y-auto pr-0.5"
+              >
+                <ul className="space-y-1">
+                  {desktopPrimaryLinks.map((item) => {
+                    const isActive = activeHref === item.href;
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          aria-current={isActive ? "page" : undefined}
+                          className={`nav-item flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2 text-[0.95rem] transition ${
+                            isActive
+                              ? "bg-[#bdd3cd] font-bold text-[#07100e]"
+                              : "font-semibold text-[#2b3b37] hover:bg-[#cae0da] hover:text-[#07100e]"
+                          }`}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`size-1.5 shrink-0 rounded-full ${
+                              isActive ? "bg-[#0e7c6b]" : "bg-[#a3bab4]"
+                            }`}
+                          />
+                          <span className="truncate">{item.label}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                {/* PREPARE Section */}
+                {prepareLinks.length > 0 ? (
+                  <div>
+                    <button
+                      type="button"
+                      aria-expanded={prepareOpen}
+                      onClick={() => setPrepareOpen((prev) => !prev)}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.72rem] font-bold tracking-[0.12em] text-[#4f6560] uppercase transition hover:text-[#07100e]"
+                    >
+                      <span className="inline-flex items-center gap-2.5">
+                        <ClipboardList
+                          className="size-4 text-[#0e7c6b]"
+                          aria-hidden="true"
+                        />
+                        <span>Prepare</span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="text-[0.65rem] text-[#5a726c]"
+                      >
+                        {prepareOpen ? "▾" : "▸"}
+                      </span>
+                    </button>
+                    {prepareOpen ? (
+                      <ul className="mt-1.5 space-y-1">
+                        {prepareLinks.map((item) => (
+                          <li key={item.label}>
+                            <Link
+                              href={item.href}
+                              className="flex min-h-10 items-center justify-between gap-2 rounded-xl px-3.5 py-1.5 text-[0.95rem] font-semibold text-[#2b3b37] transition hover:bg-[#cae0da] hover:text-[#07100e]"
+                            >
+                              <span className="inline-flex items-center gap-3 truncate">
+                                <span
+                                  aria-hidden="true"
+                                  className="size-1.5 shrink-0 rounded-full bg-[#16917d]"
+                                />
+                                <span className="truncate">{item.label}</span>
+                              </span>
+                              <span className="rounded-full bg-[#c3d7d2] px-2.5 py-0.5 text-xs font-semibold text-[#2b3b37]">
+                                {item.badge}
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {/* STOCK & BUYING Section */}
+                {stockBuyingLinks.length > 0 ? (
+                  <div>
+                    <button
+                      type="button"
+                      aria-expanded={stockBuyingOpen}
+                      onClick={() => setStockBuyingOpen((prev) => !prev)}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.72rem] font-bold tracking-[0.12em] text-[#4f6560] uppercase transition hover:text-[#07100e]"
+                    >
+                      <span className="inline-flex items-center gap-2.5">
+                        <Box
+                          className="size-4 text-[#0e7c6b]"
+                          aria-hidden="true"
+                        />
+                        <span>Stock &amp; Buying</span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="text-[0.65rem] text-[#5a726c]"
+                      >
+                        {stockBuyingOpen ? "▾" : "▸"}
+                      </span>
+                    </button>
+                    {stockBuyingOpen ? (
+                      <ul className="mt-1.5 space-y-1">
+                        {stockBuyingLinks.map((item) => (
+                          <li key={item.label}>
+                            <Link
+                              href={item.href}
+                              className="flex min-h-10 items-center gap-3 rounded-xl px-3.5 py-1.5 text-[0.95rem] font-semibold text-[#2b3b37] transition hover:bg-[#cae0da] hover:text-[#07100e]"
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="size-1.5 shrink-0 rounded-full bg-[#a3bab4]"
+                              />
+                              <span className="truncate">{item.label}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
+              </nav>
+            </div>
+
+            {/* Bottom Profile Footer */}
+            <div className="border-t border-[#c2d6d0] px-4 pt-3.5 pb-3">
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="flex min-w-0 items-center gap-3">
+                  {state.profile.avatarDataUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={state.profile.avatarDataUrl}
+                      alt={`${state.profile.fullName} avatar`}
+                      className="size-10 shrink-0 rounded-full border border-[#a8c2bc] object-cover"
+                    />
+                  ) : (
+                    <div
+                      aria-hidden="true"
+                      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#c2d6d0] text-xs font-extrabold text-[#07100e]"
+                    >
+                      {state.profile.initials}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-extrabold leading-tight text-[#07100e]">
+                      {state.profile.fullName}
+                    </p>
+                    <p className="mt-0.5 text-xs font-medium text-[#5c726d]">
+                      {state.profile.roleLabel}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={signOut}
+                  aria-label="Sign out"
+                  title="Sign out"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-[#5c726d] transition hover:bg-[#c6dad5] hover:text-[#b91c1c]"
+                >
+                  <Power className="size-4.5" aria-hidden="true" />
+                </button>
+              </div>
+
+              <p className="mt-2 text-center text-[0.7rem] font-medium text-[#6c827d]">
+                {APP_BUILD_TAG}
+              </p>
+            </div>
+          </>
+        )}
       </aside>
 
       {/* Main Column */}
