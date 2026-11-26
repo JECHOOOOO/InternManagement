@@ -132,14 +132,14 @@ export function OrasCharts({
                     y1={y}
                     x2={svgW - padRight}
                     y2={y}
-                    stroke="#222a2a"
+                    stroke="var(--border-subtle)"
                     strokeWidth="1"
                   />
                   <text
                     x={padLeft - 8}
                     y={y + 4}
                     textAnchor="end"
-                    fill="#93a3a3"
+                    fill="var(--text-muted)"
                     fontSize="10.5"
                     fontWeight="500"
                   >
@@ -155,7 +155,7 @@ export function OrasCharts({
               y1={padTop}
               x2={padLeft}
               y2={padTop + plotH}
-              stroke="#3a4747"
+              stroke="var(--border-control)"
               strokeWidth="1.2"
             />
             <line
@@ -163,7 +163,7 @@ export function OrasCharts({
               y1={padTop + plotH}
               x2={svgW - padRight}
               y2={padTop + plotH}
-              stroke="#3a4747"
+              stroke="var(--border-control)"
               strokeWidth="1.2"
             />
 
@@ -293,7 +293,7 @@ export function OrasCharts({
                 cy="60"
                 r={ringRadius}
                 fill="none"
-                stroke="#222c2c"
+                stroke="var(--bg-pill)"
                 strokeWidth={ringStrokeWidth}
               />
 
@@ -318,7 +318,7 @@ export function OrasCharts({
                 cy="60"
                 r={ringRadius + ringStrokeWidth / 2}
                 fill="none"
-                stroke="#090c0c"
+                stroke="var(--bg-canvas)"
                 strokeWidth="3"
               />
               <circle
@@ -326,7 +326,7 @@ export function OrasCharts({
                 cy="60"
                 r={ringRadius - ringStrokeWidth / 2}
                 fill="none"
-                stroke="#090c0c"
+                stroke="var(--bg-canvas)"
                 strokeWidth="3"
               />
             </svg>

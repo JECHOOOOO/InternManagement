@@ -3,20 +3,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeftToLine,
   ArrowRightFromLine,
   Box,
+  ChevronDown,
   ClipboardList,
   Clock,
   Eye,
   EyeOff,
   FilePenLine,
   Home,
+  LogOut,
+  Moon,
   MoreHorizontal,
-  Power,
   Search,
+  Sun,
   Users,
 } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
@@ -42,6 +45,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const {
     state,
+    theme,
+    toggleTheme,
     liveMessage,
     signInWithCredentials,
     signOut,
@@ -55,11 +60,37 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [prepareOpen, setPrepareOpen] = useState(true);
   const [stockBuyingOpen, setStockBuyingOpen] = useState(true);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuDesktopRef = useRef<HTMLDivElement>(null);
+  const userMenuMobileRef = useRef<HTMLDivElement>(null);
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [forgotOpen, setForgotOpen] = useState(false);
+
+  const isLight = theme === "light";
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      const inDesktop = userMenuDesktopRef.current?.contains(target);
+      const inMobile = userMenuMobileRef.current?.contains(target);
+      if (!inDesktop && !inMobile) {
+        setUserMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [userMenuOpen]);
 
   const pendingLabelsCount = useMemo(
     () =>
@@ -302,8 +333,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to main content
       </a>
 
-      {/* Desktop Left Sidebar (Exact Ashai Mint-Sage Sidebar) */}
-      <aside className="hidden border-r border-[#bfd4ce] bg-[#d9e8e4] text-[#1f2e2b] md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:justify-between">
+      {/* Desktop Left Sidebar (Inverts cleanly between Dark Mode mint-sage & Light Mode dark-teal) */}
+      <aside
+        className={`hidden border-r md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:justify-between ${
+          isLight
+            ? "border-[#192b28] bg-[#0d1c1a] text-[#e7f0ee]"
+            : "border-[#bfd4ce] bg-[#d9e8e4] text-[#1f2e2b]"
+        }`}
+      >
         {sidebarCollapsed ? (
           <div className="flex h-full flex-col items-center justify-between py-4">
             <button
@@ -311,7 +348,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => setSidebarCollapsed(false)}
               aria-label="Expand sidebar"
               title="Expand sidebar"
-              className="inline-flex size-10 items-center justify-center rounded-xl text-[#4f6560] transition hover:bg-[#c6dad5] hover:text-[#07100e]"
+              className={`inline-flex size-10 items-center justify-center rounded-xl transition ${
+                isLight
+                  ? "text-[#8ea8a3] hover:bg-[#17302c] hover:text-white"
+                  : "text-[#4f6560] hover:bg-[#c6dad5] hover:text-[#07100e]"
+              }`}
             >
               <ArrowRightFromLine className="size-5" aria-hidden="true" />
             </button>
@@ -329,8 +370,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                     aria-current={isActive ? "page" : undefined}
                     className={`flex size-10 items-center justify-center rounded-xl transition ${
                       isActive
-                        ? "bg-[#bdd3cd] text-[#0e7c6b]"
-                        : "text-[#4f6560] hover:bg-[#c6dad5] hover:text-[#07100e]"
+                        ? isLight
+                          ? "bg-[#17332e] text-[#4dc4b2]"
+                          : "bg-[#bdd3cd] text-[#0e7c6b]"
+                        : isLight
+                          ? "text-[#8ea8a3] hover:bg-[#17302c] hover:text-white"
+                          : "text-[#4f6560] hover:bg-[#c6dad5] hover:text-[#07100e]"
                     }`}
                   >
                     <Icon className="size-5" aria-hidden="true" />
@@ -339,15 +384,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               })}
             </nav>
 
-            <button
-              type="button"
-              onClick={signOut}
-              aria-label="Sign out"
-              title="Sign out"
-              className="inline-flex size-10 items-center justify-center rounded-xl text-[#5c726d] transition hover:bg-[#c6dad5] hover:text-[#b91c1c]"
-            >
-              <Power className="size-4.5" aria-hidden="true" />
-            </button>
+            <span className="h-4" aria-hidden="true" />
           </div>
         ) : (
           <>
@@ -359,13 +396,26 @@ export function AppShell({ children }: { children: ReactNode }) {
                   aria-label="Ashai Apparel Smart Hub Home"
                   className="block rounded-lg px-0.5 py-0.5"
                 >
-                  <span className="block text-[1.85rem] font-black leading-none tracking-[-0.03em]">
-                    <span className="text-[#07100e]">ash</span>
-                    <span className="text-[#0e7c6b]">ai</span>
-                  </span>
-                  <span className="mt-1.5 block text-[0.62rem] font-semibold tracking-[0.22em] text-[#5d736e] uppercase">
-                    Apparel Smart Hub
-                  </span>
+                  {isLight ? (
+                    <Image
+                      src="/ashai-logo.png"
+                      alt="Ashai Apparel Smart Hub"
+                      width={172}
+                      height={43}
+                      priority
+                      className="block h-10 w-auto select-none"
+                    />
+                  ) : (
+                    <>
+                      <span className="block text-[1.85rem] font-black leading-none tracking-[-0.03em]">
+                        <span className="text-[#07100e]">ash</span>
+                        <span className="text-[#0e7c6b]">ai</span>
+                      </span>
+                      <span className="mt-1.5 block text-[0.62rem] font-semibold tracking-[0.22em] text-[#5d736e] uppercase">
+                        Apparel Smart Hub
+                      </span>
+                    </>
+                  )}
                 </Link>
 
                 <button
@@ -373,7 +423,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => setSidebarCollapsed(true)}
                   aria-label="Collapse sidebar"
                   title="Collapse sidebar"
-                  className="mt-1 inline-flex size-8 items-center justify-center rounded-lg text-[#5a726c] transition hover:bg-[#c6dad5] hover:text-[#07100e]"
+                  className={`mt-1 inline-flex size-8 items-center justify-center rounded-lg transition ${
+                    isLight
+                      ? "text-[#7c9792] hover:bg-[#17302c] hover:text-white"
+                      : "text-[#5a726c] hover:bg-[#c6dad5] hover:text-[#07100e]"
+                  }`}
                 >
                   <ArrowLeftToLine className="size-4.5" aria-hidden="true" />
                 </button>
@@ -382,7 +436,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               {/* Sidebar Search */}
               <div className="relative mt-4">
                 <Search
-                  className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[#6b817c]"
+                  className={`pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 ${
+                    isLight ? "text-[#74908a]" : "text-[#6b817c]"
+                  }`}
                   aria-hidden="true"
                 />
                 <input
@@ -394,7 +450,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   autoCorrect="off"
                   autoCapitalize="none"
                   spellCheck={false}
-                  className="w-full rounded-xl border border-[#bed3cd] bg-[#cfe0dc] py-2.5 pr-3 pl-10 text-sm text-[#172623] outline-none transition placeholder:text-[#6e847f] focus:border-[#0e7c6b]"
+                  className={`w-full rounded-xl border py-2.5 pr-3 pl-10 text-sm outline-none transition ${
+                    isLight
+                      ? "border-[#1d3430] bg-[#132624] text-[#e9f2f0] placeholder:text-[#6e8a84] focus:border-[#4dc4b2]"
+                      : "border-[#bed3cd] bg-[#cfe0dc] text-[#172623] placeholder:text-[#6e847f] focus:border-[#0e7c6b]"
+                  }`}
                 />
               </div>
 
@@ -407,7 +467,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                     setPrepareOpen(next);
                     setStockBuyingOpen(next);
                   }}
-                  className="text-xs font-semibold text-[#5d746f] transition hover:text-[#0e7c6b]"
+                  className={`text-xs font-semibold transition ${
+                    isLight
+                      ? "text-[#7d9893] hover:text-[#4dc4b2]"
+                      : "text-[#5d746f] hover:text-[#0e7c6b]"
+                  }`}
                 >
                   {allSidebarExpanded ? "Collapse all" : "Expand all"}
                 </button>
@@ -428,14 +492,24 @@ export function AppShell({ children }: { children: ReactNode }) {
                           aria-current={isActive ? "page" : undefined}
                           className={`nav-item flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2 text-[0.95rem] transition ${
                             isActive
-                              ? "bg-[#bdd3cd] font-bold text-[#07100e]"
-                              : "font-semibold text-[#2b3b37] hover:bg-[#cae0da] hover:text-[#07100e]"
+                              ? isLight
+                                ? "bg-[#17322d] font-bold text-[#f4faf9]"
+                                : "bg-[#bdd3cd] font-bold text-[#07100e]"
+                              : isLight
+                                ? "font-semibold text-[#9eb5b0] hover:bg-[#142a26] hover:text-white"
+                                : "font-semibold text-[#2b3b37] hover:bg-[#cae0da] hover:text-[#07100e]"
                           }`}
                         >
                           <span
                             aria-hidden="true"
                             className={`size-1.5 shrink-0 rounded-full ${
-                              isActive ? "bg-[#0e7c6b]" : "bg-[#a3bab4]"
+                              isActive
+                                ? isLight
+                                  ? "bg-[#4dc4b2]"
+                                  : "bg-[#0e7c6b]"
+                                : isLight
+                                  ? "bg-[#45635d]"
+                                  : "bg-[#a3bab4]"
                             }`}
                           />
                           <span className="truncate">{item.label}</span>
@@ -452,18 +526,26 @@ export function AppShell({ children }: { children: ReactNode }) {
                       type="button"
                       aria-expanded={prepareOpen}
                       onClick={() => setPrepareOpen((prev) => !prev)}
-                      className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.72rem] font-bold tracking-[0.12em] text-[#4f6560] uppercase transition hover:text-[#07100e]"
+                      className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.72rem] font-bold tracking-[0.12em] uppercase transition ${
+                        isLight
+                          ? "text-[#7a948f] hover:text-white"
+                          : "text-[#4f6560] hover:text-[#07100e]"
+                      }`}
                     >
                       <span className="inline-flex items-center gap-2.5">
                         <ClipboardList
-                          className="size-4 text-[#0e7c6b]"
+                          className={`size-4 ${
+                            isLight ? "text-[#4dc4b2]" : "text-[#0e7c6b]"
+                          }`}
                           aria-hidden="true"
                         />
                         <span>Prepare</span>
                       </span>
                       <span
                         aria-hidden="true"
-                        className="text-[0.65rem] text-[#5a726c]"
+                        className={`text-[0.65rem] ${
+                          isLight ? "text-[#7a948f]" : "text-[#5a726c]"
+                        }`}
                       >
                         {prepareOpen ? "▾" : "▸"}
                       </span>
@@ -474,16 +556,28 @@ export function AppShell({ children }: { children: ReactNode }) {
                           <li key={item.label}>
                             <Link
                               href={item.href}
-                              className="flex min-h-10 items-center justify-between gap-2 rounded-xl px-3.5 py-1.5 text-[0.95rem] font-semibold text-[#2b3b37] transition hover:bg-[#cae0da] hover:text-[#07100e]"
+                              className={`flex min-h-10 items-center justify-between gap-2 rounded-xl px-3.5 py-1.5 text-[0.95rem] font-semibold transition ${
+                                isLight
+                                  ? "text-[#9eb5b0] hover:bg-[#142a26] hover:text-white"
+                                  : "text-[#2b3b37] hover:bg-[#cae0da] hover:text-[#07100e]"
+                              }`}
                             >
                               <span className="inline-flex items-center gap-3 truncate">
                                 <span
                                   aria-hidden="true"
-                                  className="size-1.5 shrink-0 rounded-full bg-[#16917d]"
+                                  className={`size-1.5 shrink-0 rounded-full ${
+                                    isLight ? "bg-[#4dc4b2]" : "bg-[#16917d]"
+                                  }`}
                                 />
                                 <span className="truncate">{item.label}</span>
                               </span>
-                              <span className="rounded-full bg-[#c3d7d2] px-2.5 py-0.5 text-xs font-semibold text-[#2b3b37]">
+                              <span
+                                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                  isLight
+                                    ? "bg-[#1a3430] text-[#b4cbc6]"
+                                    : "bg-[#c3d7d2] text-[#2b3b37]"
+                                }`}
+                              >
                                 {item.badge}
                               </span>
                             </Link>
@@ -501,18 +595,26 @@ export function AppShell({ children }: { children: ReactNode }) {
                       type="button"
                       aria-expanded={stockBuyingOpen}
                       onClick={() => setStockBuyingOpen((prev) => !prev)}
-                      className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.72rem] font-bold tracking-[0.12em] text-[#4f6560] uppercase transition hover:text-[#07100e]"
+                      className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.72rem] font-bold tracking-[0.12em] uppercase transition ${
+                        isLight
+                          ? "text-[#7a948f] hover:text-white"
+                          : "text-[#4f6560] hover:text-[#07100e]"
+                      }`}
                     >
                       <span className="inline-flex items-center gap-2.5">
                         <Box
-                          className="size-4 text-[#0e7c6b]"
+                          className={`size-4 ${
+                            isLight ? "text-[#4dc4b2]" : "text-[#0e7c6b]"
+                          }`}
                           aria-hidden="true"
                         />
                         <span>Stock &amp; Buying</span>
                       </span>
                       <span
                         aria-hidden="true"
-                        className="text-[0.65rem] text-[#5a726c]"
+                        className={`text-[0.65rem] ${
+                          isLight ? "text-[#7a948f]" : "text-[#5a726c]"
+                        }`}
                       >
                         {stockBuyingOpen ? "▾" : "▸"}
                       </span>
@@ -523,11 +625,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                           <li key={item.label}>
                             <Link
                               href={item.href}
-                              className="flex min-h-10 items-center gap-3 rounded-xl px-3.5 py-1.5 text-[0.95rem] font-semibold text-[#2b3b37] transition hover:bg-[#cae0da] hover:text-[#07100e]"
+                              className={`flex min-h-10 items-center gap-3 rounded-xl px-3.5 py-1.5 text-[0.95rem] font-semibold transition ${
+                                isLight
+                                  ? "text-[#9eb5b0] hover:bg-[#142a26] hover:text-white"
+                                  : "text-[#2b3b37] hover:bg-[#cae0da] hover:text-[#07100e]"
+                              }`}
                             >
                               <span
                                 aria-hidden="true"
-                                className="size-1.5 shrink-0 rounded-full bg-[#a3bab4]"
+                                className={`size-1.5 shrink-0 rounded-full ${
+                                  isLight ? "bg-[#45635d]" : "bg-[#a3bab4]"
+                                }`}
                               />
                               <span className="truncate">{item.label}</span>
                             </Link>
@@ -540,47 +648,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               </nav>
             </div>
 
-            {/* Bottom Profile Footer */}
-            <div className="border-t border-[#c2d6d0] px-4 pt-3.5 pb-3">
-              <div className="flex items-center justify-between gap-2.5">
-                <div className="flex min-w-0 items-center gap-3">
-                  {state.profile.avatarDataUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={state.profile.avatarDataUrl}
-                      alt={`${state.profile.fullName} avatar`}
-                      className="size-10 shrink-0 rounded-full border border-[#a8c2bc] object-cover"
-                    />
-                  ) : (
-                    <div
-                      aria-hidden="true"
-                      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#c2d6d0] text-xs font-extrabold text-[#07100e]"
-                    >
-                      {state.profile.initials}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-extrabold leading-tight text-[#07100e]">
-                      {state.profile.fullName}
-                    </p>
-                    <p className="mt-0.5 text-xs font-medium text-[#5c726d]">
-                      {state.profile.roleLabel}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={signOut}
-                  aria-label="Sign out"
-                  title="Sign out"
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-[#5c726d] transition hover:bg-[#c6dad5] hover:text-[#b91c1c]"
-                >
-                  <Power className="size-4.5" aria-hidden="true" />
-                </button>
-              </div>
-
-              <p className="mt-2 text-center text-[0.7rem] font-medium text-[#6c827d]">
+            {/* Subtle build tag only (Name, Intern, and Logout moved to upper-right menu) */}
+            <div
+              className={`border-t px-4 py-2.5 ${
+                isLight ? "border-[#192b28]" : "border-[#c2d6d0]"
+              }`}
+            >
+              <p
+                className={`text-center text-[0.7rem] font-medium ${
+                  isLight ? "text-[#607a75]" : "text-[#6c827d]"
+                }`}
+              >
                 {APP_BUILD_TAG}
               </p>
             </div>
@@ -590,10 +668,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main Column */}
       <div className="flex min-w-0 flex-col">
-        {/* Sticky Mobile/Compact Header (matches all 16 screenshots) */}
-        <header className="sticky top-0 z-20 border-b border-[var(--border-subtle)] bg-[var(--bg-header)]/95 backdrop-blur-md md:hidden">
-          <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
-            <div className="flex min-w-0 items-center gap-3">
+        {/* Sticky Mobile/Compact Header */}
+        <header className="sticky top-0 z-30 border-b border-[var(--border-subtle)] bg-[var(--bg-header)]/95 backdrop-blur-md md:hidden">
+          <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
               <Link
                 href="/dashboard"
                 aria-label="Ashai Apparel Smart Hub Home"
@@ -611,36 +689,230 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setDemoNoticeOpen(true)}
-                className="rounded-full border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-2.5 py-0.5 text-[0.68rem] font-bold tracking-wide text-[var(--accent-teal)] uppercase"
+                className="rounded-full border border-[#2e8477] bg-[rgba(77,196,178,0.14)] px-2.5 py-0.5 text-[0.68rem] font-bold tracking-wide text-[#4dc4b2] uppercase"
               >
                 Demo
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search Ashai screens, tasks, and guides"
-              className="ashai-tap-target -mr-2 inline-flex items-center justify-center rounded-xl text-[var(--text-primary)] hover:bg-[var(--bg-card)]"
-            >
-              <Search className="size-6" aria-hidden="true" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                aria-label="Search Ashai screens, tasks, and guides"
+                className="inline-flex size-10 items-center justify-center rounded-xl text-[#f3f6f6] hover:bg-white/10"
+              >
+                <Search className="size-5" aria-hidden="true" />
+              </button>
+
+              {/* Mobile Upper-Right Clickable Account Menu */}
+              <div ref={userMenuMobileRef} className="relative">
+                <button
+                  type="button"
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
+                  aria-label="Account menu"
+                  onClick={() => setUserMenuOpen((prev) => !prev)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/10 py-1 pr-2 pl-1 text-xs font-bold text-white transition hover:bg-white/15"
+                >
+                  <span className="flex size-7 items-center justify-center rounded-full bg-[#4dc4b2] text-[0.7rem] font-extrabold text-[#041b18]">
+                    {state.profile.initials}
+                  </span>
+                  <ChevronDown className="size-3.5 text-[#c1cccc]" aria-hidden="true" />
+                </button>
+
+                {userMenuOpen ? (
+                  <div
+                    role="menu"
+                    className="absolute right-0 mt-2 w-56 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-2 shadow-2xl"
+                  >
+                    <div className="border-b border-[var(--border-subtle)] px-3 py-2">
+                      <p className="truncate text-sm font-bold text-[var(--text-primary)]">
+                        {state.profile.fullName}
+                      </p>
+                      <p className="text-xs font-semibold text-[var(--accent-teal)]">
+                        {state.profile.roleLabel}
+                      </p>
+                    </div>
+                    <div className="mt-1 space-y-1">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          toggleTheme();
+                          setUserMenuOpen(false);
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-card-hover)]"
+                      >
+                        {isLight ? (
+                          <>
+                            <Moon className="size-4 text-[var(--accent-teal)]" aria-hidden="true" />
+                            <span>Dark mode</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sun className="size-4 text-[var(--accent-teal)]" aria-hidden="true" />
+                            <span>Light mode</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          signOut();
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--accent-danger)] transition hover:bg-[var(--accent-danger-soft)]"
+                      >
+                        <LogOut className="size-4" aria-hidden="true" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </div>
         </header>
 
-        {/* Subtle Desktop Top Utility Strip */}
-        <header className="hidden border-b border-[var(--border-subtle)] bg-[var(--bg-header)]/80 px-6 py-2 md:flex md:items-center md:justify-between">
-          <p className="text-xs font-medium text-[var(--text-muted)]">
-            Intern workspace
-          </p>
+        {/* Desktop Top Utility Bar (Inverts with Light/Dark mode + Upper-Right Clickable Profile Menu) */}
+        <header
+          className={`sticky top-0 z-30 hidden border-b px-6 py-2.5 md:flex md:items-center md:justify-between ${
+            isLight
+              ? "border-[#1c2927] bg-[#0e1514] text-[#f3f6f6]"
+              : "border-[#dde5e3] bg-[#f4f6f5] text-[#0b1412]"
+          }`}
+        >
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
-            className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 text-xs text-[var(--text-secondary)] hover:border-[var(--border-control)] hover:text-[var(--text-primary)]"
+            className={`inline-flex min-h-9 w-80 items-center gap-2 rounded-xl px-3.5 text-xs font-medium transition ${
+              isLight
+                ? "bg-[#182221] text-[#8fa39f] hover:bg-[#1f2c2b] hover:text-white"
+                : "bg-[#e5eae8] text-[#5c6d6a] hover:bg-[#dbe2e0] hover:text-[#0b1412]"
+            }`}
           >
-            <Search className="size-3.5" aria-hidden="true" />
-            <span>Search tasks, leads, or guides</span>
+            <Search className="size-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate">Search orders, clients, pages...</span>
           </button>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setDemoNoticeOpen(true)}
+              className={`rounded-full border px-2.5 py-1 text-[0.68rem] font-bold tracking-wide uppercase transition ${
+                isLight
+                  ? "border-[#2e8477] bg-[rgba(77,196,178,0.14)] text-[#4dc4b2] hover:bg-[rgba(77,196,178,0.22)]"
+                  : "border-[#0e7c6b]/30 bg-[#0e7c6b]/10 text-[#0e7c6b] hover:bg-[#0e7c6b]/20"
+              }`}
+            >
+              Demo
+            </button>
+
+            {/* Upper-Right Clickable Account Pill (Intern, Light/Dark mode, Logout) */}
+            <div ref={userMenuDesktopRef} className="relative">
+              <button
+                type="button"
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                className={`inline-flex items-center gap-2.5 rounded-full py-1 pr-3 pl-1.5 text-xs font-bold transition ${
+                  isLight
+                    ? "bg-[#182221] text-[#f3f6f6] hover:bg-[#22302e]"
+                    : "bg-[#e5ecea] text-[#0b1412] hover:bg-[#d8e3e0]"
+                }`}
+              >
+                {state.profile.avatarDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={state.profile.avatarDataUrl}
+                    alt={`${state.profile.fullName} avatar`}
+                    className="size-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className={`flex size-7 items-center justify-center rounded-full text-[0.7rem] font-extrabold ${
+                      isLight
+                        ? "bg-[#147a6a] text-white"
+                        : "bg-[#4dc4b2] text-[#041b18]"
+                    }`}
+                  >
+                    {state.profile.initials}
+                  </span>
+                )}
+                <span className="max-w-36 truncate">
+                  {state.profile.fullName}
+                </span>
+                <ChevronDown
+                  className={`size-3.5 transition-transform ${
+                    userMenuOpen ? "rotate-180" : ""
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+
+              {userMenuOpen ? (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-60 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-2 shadow-2xl"
+                >
+                  <div className="border-b border-[var(--border-subtle)] px-3 py-2.5">
+                    <p className="truncate text-sm font-bold text-[var(--text-primary)]">
+                      {state.profile.fullName}
+                    </p>
+                    <p className="mt-0.5 text-xs font-semibold text-[var(--accent-teal)]">
+                      {state.profile.roleLabel}
+                    </p>
+                  </div>
+
+                  <div className="mt-1.5 space-y-1">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        toggleTheme();
+                        setUserMenuOpen(false);
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-card-hover)]"
+                    >
+                      <span className="inline-flex items-center gap-2.5">
+                        {isLight ? (
+                          <Moon
+                            className="size-4 text-[var(--accent-teal)]"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <Sun
+                            className="size-4 text-[var(--accent-teal)]"
+                            aria-hidden="true"
+                          />
+                        )}
+                        <span>{isLight ? "Dark mode" : "Light mode"}</span>
+                      </span>
+                      <span className="rounded-md bg-[var(--bg-pill)] px-2 py-0.5 text-[0.68rem] font-semibold text-[var(--text-muted)]">
+                        {isLight ? "Light" : "Dark"}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        signOut();
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--accent-danger)] transition hover:bg-[var(--accent-danger-soft)]"
+                    >
+                      <LogOut className="size-4" aria-hidden="true" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </header>
 
         {/* Visible Status Toast */}

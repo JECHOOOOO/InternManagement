@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   useSyncExternalStore,
@@ -31,6 +32,50 @@ import type {
 const SESSION_KEY = "ashai-intern-session-v5";
 const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v5:";
 const ROSTER_KEY = "ashai-intern-cleaning-roster-v4";
+const THEME_KEY = "ashai-theme-v1";
+
+export type AppTheme = "dark" | "light";
+
+const themeListeners = new Set<() => void>();
+let cachedTheme: AppTheme | null = null;
+
+function readThemeSnapshot(): AppTheme {
+  if (typeof window === "undefined") return "dark";
+  if (cachedTheme !== null) return cachedTheme;
+  try {
+    const saved = window.localStorage.getItem(THEME_KEY);
+    cachedTheme = saved === "light" ? "light" : "dark";
+  } catch {
+    cachedTheme = "dark";
+  }
+  return cachedTheme;
+}
+
+function getServerThemeSnapshot(): AppTheme {
+  return "dark";
+}
+
+function subscribeTheme(listener: () => void): () => void {
+  themeListeners.add(listener);
+  return () => {
+    themeListeners.delete(listener);
+  };
+}
+
+function setThemeStore(next: AppTheme) {
+  cachedTheme = next;
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // Ignore storage errors
+    }
+    document.documentElement.dataset.theme = next;
+  }
+  for (const listener of themeListeners) {
+    listener();
+  }
+}
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -300,6 +345,9 @@ function updateStore(updater: (prev: DemoAppState) => DemoAppState) {
 
 interface InternAppContextValue {
   state: DemoAppState;
+  theme: AppTheme;
+  setTheme: (next: AppTheme) => void;
+  toggleTheme: () => void;
   liveMessage: string;
   announce: (msg: string) => void;
   toggleNotifications: (enabled: boolean) => Promise<void>;
@@ -350,7 +398,25 @@ function formatCurrentTimeLabel(): string {
 
 export function InternAppProvider({ children }: { children: ReactNode }) {
   const state = useSyncExternalStore(subscribe, readSnapshot, getServerSnapshot);
+  const theme = useSyncExternalStore(
+    subscribeTheme,
+    readThemeSnapshot,
+    getServerThemeSnapshot
+  );
   const [liveMessage, setLiveMessage] = useState("");
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
+  const setTheme = useCallback((next: AppTheme) => {
+    setThemeStore(next);
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    const next: AppTheme = readThemeSnapshot() === "dark" ? "light" : "dark";
+    setThemeStore(next);
+  }, []);
 
   const announce = useCallback((msg: string) => {
     setLiveMessage("");
@@ -781,6 +847,9 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<InternAppContextValue>(
     () => ({
       state,
+      theme,
+      setTheme,
+      toggleTheme,
       liveMessage,
       announce,
       toggleNotifications,
@@ -807,6 +876,9 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
+      theme,
+      setTheme,
+      toggleTheme,
       liveMessage,
       announce,
       toggleNotifications,

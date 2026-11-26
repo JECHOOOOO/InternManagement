@@ -282,18 +282,18 @@ export default function OrasPage() {
         </p>
 
         {/* Lunch & Shift Window Rules Callout */}
-        <div className="mt-4 flex items-center gap-3.5 rounded-xl border border-[#4a3210] bg-[#0e0a04] px-4 py-3.5 text-[0.84rem] leading-[1.55] text-[#cfa968]">
+        <div className="mt-4 flex items-center gap-3.5 rounded-xl border border-[var(--callout-amber-border)] bg-[var(--callout-amber-bg)] px-4 py-3.5 text-[0.84rem] leading-[1.55] text-[var(--callout-amber-text)]">
           <Utensils
-            className="size-4.5 shrink-0 text-[#d98a2b]"
+            className="size-4.5 shrink-0 text-[var(--callout-amber-icon)]"
             aria-hidden="true"
           />
           <div>
             <p className="font-normal">
-              <strong className="font-semibold text-[#e8c584]">
+              <strong className="font-semibold text-[var(--callout-amber-strong)]">
                 12:00–1:00 ay pahinga
               </strong>{" "}
               — awtomatikong ibinabawas, hindi kailangang mag-time out.{" "}
-              <strong className="font-semibold text-[#e8c584]">
+              <strong className="font-semibold text-[var(--callout-amber-strong)]">
                 8:00–5:00 lang ang binibilang
               </strong>{" "}
               sa oras ng duty.
@@ -327,7 +327,7 @@ export default function OrasPage() {
             <button
               type="button"
               onClick={() => setTimeOutModalOpen(true)}
-              className="ashai-tap-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#f1f5f9] px-4 py-3 text-base font-extrabold text-[#0b1010] transition hover:bg-white"
+              className="ashai-tap-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--timeout-btn-bg)] px-4 py-3 text-base font-extrabold text-[var(--timeout-btn-text)] transition hover:bg-[var(--timeout-btn-hover)]"
             >
               <LogOut className="size-5" aria-hidden="true" />
               <span>Time out</span>

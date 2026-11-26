@@ -8,16 +8,16 @@
 :root {
   color-scheme: dark;
 
-  --bg-canvas: #090c0c;
+  --bg-canvas: #070a0a;
   --bg-header: #0b0f0f;
-  --bg-card: #111616;
+  --bg-card: #101515;
   --bg-card-hover: #161d1d;
-  --bg-card-inner: #151b1b;
-  --bg-input: #0c1010;
+  --bg-card-inner: #141a1a;
+  --bg-input: #0b0f0f;
   --bg-pill: #1b2222;
 
-  --border-subtle: #222a2a;
-  --border-control: #586969;
+  --border-subtle: #1f2727;
+  --border-control: #3a4747;
   --border-teal: #2e8477;
   --border-amber: #7a581c;
 
@@ -35,6 +35,16 @@
   --accent-amber: #e6a93b;
   --accent-amber-soft: rgba(230, 169, 59, 0.08);
 
+  --callout-amber-bg: #0e0a04;
+  --callout-amber-border: #4a3210;
+  --callout-amber-text: #cfa968;
+  --callout-amber-strong: #e8c584;
+  --callout-amber-icon: #d98a2b;
+
+  --timeout-btn-bg: #f1f5f9;
+  --timeout-btn-hover: #ffffff;
+  --timeout-btn-text: #0b1010;
+
   --accent-success: #4ade80;
   --accent-danger: #f87171;
   --accent-danger-soft: rgba(248, 113, 113, 0.12);
@@ -43,6 +53,54 @@
   --scrollbar-thumb: #455454;
 
   --bottom-nav-height: 4.5rem;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-canvas: #f3f6f5;
+  --bg-header: #0e1514;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f5f9f8;
+  --bg-card-inner: #f6f9f8;
+  --bg-input: #ffffff;
+  --bg-pill: #e7efed;
+
+  --border-subtle: #dde6e4;
+  --border-control: #c5d3d0;
+  --border-teal: #0e7c6b;
+  --border-amber: #e2c578;
+
+  --text-primary: #0f1a18;
+  --text-secondary: #425551;
+  --text-muted: #667b77;
+
+  --accent-teal: #0f766e;
+  --accent-teal-hover: #0d625b;
+  --accent-teal-ink: #ffffff;
+  --accent-teal-soft: rgba(15, 118, 110, 0.1);
+
+  --accent-gold-bg: #8a6414;
+  --accent-gold-hover: #745310;
+  --accent-amber: #b45309;
+  --accent-amber-soft: rgba(217, 119, 6, 0.1);
+
+  --callout-amber-bg: #fef9e7;
+  --callout-amber-border: #ead79c;
+  --callout-amber-text: #7a5414;
+  --callout-amber-strong: #543608;
+  --callout-amber-icon: #b4690e;
+
+  --timeout-btn-bg: #0f1924;
+  --timeout-btn-hover: #1a2736;
+  --timeout-btn-text: #ffffff;
+
+  --accent-success: #15803d;
+  --accent-danger: #dc2626;
+  --accent-danger-soft: rgba(220, 38, 38, 0.1);
+
+  --scrollbar-track: #e6eeec;
+  --scrollbar-thumb: #9fb3ae;
 }
 
 html {
