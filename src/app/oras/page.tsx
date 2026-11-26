@@ -10,6 +10,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
+import { OrasCharts } from "@/components/OrasCharts";
 import { useInternApp } from "@/context/InternAppContext";
 import { WORK_AREA_OPTIONS } from "@/data/demoData";
 import type { WorkAreaOption, WorkdayLog } from "@/types/intern";
@@ -384,6 +385,12 @@ export default function OrasPage() {
             {allExpanded ? "Collapse all" : "Expand all"}
           </button>
         </div>
+
+        <OrasCharts
+          workdays={state.workdays}
+          totalLoggedHours={state.totalLoggedHours}
+          targetHours={targetHours}
+        />
 
         <div className="space-y-3">
           {state.workdays.map((day) => (
