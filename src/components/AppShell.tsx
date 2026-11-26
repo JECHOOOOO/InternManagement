@@ -16,7 +16,7 @@ import { AccessibleModal } from "@/components/AccessibleModal";
 import { useInternApp } from "@/context/InternAppContext";
 import {
   APP_BUILD_TAG,
-  INITIAL_ASSIGNED_WORK,
+  CLEANING_TASKS,
   MORE_KNOWLEDGE_CATEGORIES,
 } from "@/data/demoData";
 import type { NavRoute } from "@/types/intern";
@@ -60,12 +60,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       href: n.href,
     }));
 
-    const tasks = INITIAL_ASSIGNED_WORK.map((t) => ({
-      id: `task-${t.id}`,
-      group: "Assigned work",
+    const tasks = CLEANING_TASKS.map((t) => ({
+      id: `cleaning-${t.id}`,
+      group: "Paglilinis",
       title: t.title,
       subtitle: t.description,
-      href: `/dashboard?tool=${t.id}`,
+      href: `/dashboard?cleaning=${t.id}`,
     }));
 
     const knowledge = MORE_KNOWLEDGE_CATEGORIES.flatMap((cat) =>
@@ -356,7 +356,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="e.g. Stock Count, mass cut, Oras, Leave..."
+              placeholder="e.g. Walis, Pantry, CR, Oras, Leave..."
               autoCorrect="off"
               autoCapitalize="none"
               spellCheck={false}

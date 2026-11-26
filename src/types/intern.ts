@@ -69,14 +69,41 @@ export interface ClientLead {
   createdAtLabel: string;
 }
 
-export interface AssignedWorkLink {
+export interface CleaningTask {
   id: string;
   title: string;
+  shortLabel: string;
   description: string;
-  category: "Prepare" | "Stock & Buying" | "Operations";
-  demoSummary: string;
-  demoChecklist: string[];
-  badgeCount?: number;
+  areaLabel: string;
+  checklist: string[];
+}
+
+export interface InternAccount {
+  id: string;
+  fullName: string;
+  initials: string;
+  roleLabel: string;
+  currentTrack: string;
+  isYou?: boolean;
+}
+
+export type WeekdayIndex = 0 | 1 | 2 | 3 | 4;
+
+export interface CleaningCompletionRecord {
+  completedAtLabel: string;
+  taskId: string;
+}
+
+export interface InternAttendanceStatus {
+  present: boolean;
+  timeInLabel?: string;
+}
+
+export interface CleaningRotationState {
+  weekOffset: number;
+  activeDayIndex: WeekdayIndex;
+  attendanceByIntern: Record<string, InternAttendanceStatus>;
+  completions: Record<string, CleaningCompletionRecord>;
 }
 
 export interface LabelQueueItem {
@@ -112,6 +139,7 @@ export interface InternProfile {
 
 export interface DemoAppState {
   signedIn: boolean;
+  activeInternId: string;
   notificationsEnabled: boolean;
   notificationPromptDismissed: boolean;
   timedIn: boolean;
@@ -123,4 +151,5 @@ export interface DemoAppState {
   leads: ClientLead[];
   labelJobs: LabelQueueItem[];
   profile: InternProfile;
+  cleaningRotation: CleaningRotationState;
 }

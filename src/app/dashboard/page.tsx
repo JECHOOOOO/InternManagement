@@ -4,18 +4,33 @@ import Link from "next/link";
 import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  AlertCircle,
   Bell,
+  CalendarDays,
   CheckCircle2,
   ChevronRight,
   Clock,
   FilePenLine,
   MessageSquare,
+  RefreshCw,
+  Sparkles,
   Sticker,
+  UserCheck,
+  Users,
 } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
 import { useInternApp } from "@/context/InternAppContext";
-import { INITIAL_ASSIGNED_WORK } from "@/data/demoData";
-import type { AssignedWorkLink } from "@/types/intern";
+import {
+  CLEANING_TASKS,
+  getAssignedCleaningTask,
+  getCompletionKey,
+  getInternIndex,
+  getWeekDateRangeLabel,
+  SAMPLE_INTERN_ACCOUNTS,
+  WEEKDAY_FULL_LABELS,
+  WEEKDAY_LABELS,
+} from "@/data/demoData";
+import type { CleaningTask, WeekdayIndex } from "@/types/intern";
 
 function DashboardContent() {
   const {
@@ -23,12 +38,19 @@ function DashboardContent() {
     toggleNotifications,
     dismissNotificationPrompt,
     toggleLabelJob,
+    switchInternAccount,
+    toggleInternAttendance,
+    toggleCleaningTaskDone,
+    completeAllPresentToday,
+    advanceRollingDay,
     announce,
   } = useInternApp();
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedTool, setSelectedTool] = useState<AssignedWorkLink | null>(null);
+  const [selectedCleaningTask, setSelectedCleaningTask] =
+    useState<CleaningTask | null>(null);
+  const [rollError, setRollError] = useState<string | null>(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState("");
@@ -36,23 +58,71 @@ function DashboardContent() {
     {
       id: "msg-1",
       sender: "Ops Desk (Demo)",
-      text: "Reminder: i-double check ang sticker counts sa Prep Table 1 bago mag-4:30 PM.",
+      text: "Reminder: i-mark as done ang assigned paglilinis bago mag-5:00 PM para mag-roll ang schedule bukas.",
       time: "9:15 AM",
     },
   ]);
 
-  const toolParam = searchParams.get("tool");
-  const paramTool = toolParam
-    ? (INITIAL_ASSIGNED_WORK.find((item) => item.id === toolParam) ?? null)
+  const cleaningParam = searchParams.get("cleaning");
+  const paramCleaning = cleaningParam
+    ? (CLEANING_TASKS.find((item) => item.id === cleaningParam) ?? null)
     : null;
-  const activeTool = selectedTool ?? paramTool;
+  const activeCleaningModal = selectedCleaningTask ?? paramCleaning;
 
-  const closeToolModal = () => {
-    setSelectedTool(null);
-    if (toolParam) {
+  const closeCleaningModal = () => {
+    setSelectedCleaningTask(null);
+    if (cleaningParam) {
       router.replace("/dashboard", { scroll: false });
     }
   };
+
+  const { weekOffset, activeDayIndex, attendanceByIntern, completions } =
+    state.cleaningRotation;
+  const activeInternIndex = getInternIndex(state.activeInternId);
+  const activeDayFullLabel = WEEKDAY_FULL_LABELS[activeDayIndex];
+  const weekRangeLabel = getWeekDateRangeLabel(weekOffset);
+
+  const myTodayTask = getAssignedCleaningTask(
+    activeInternIndex,
+    activeDayIndex,
+    weekOffset
+  );
+  const myTodayCompletion =
+    completions[getCompletionKey(weekOffset, activeDayIndex, state.activeInternId)];
+  const myAttendanceToday = attendanceByIntern[state.activeInternId] ?? {
+    present: true,
+    timeInLabel: "8:25 AM",
+  };
+
+  const myCompletedCountThisWeek = useMemo(() => {
+    let count = 0;
+    for (let d = 0; d < 5; d++) {
+      if (completions[getCompletionKey(weekOffset, d, state.activeInternId)]) {
+        count++;
+      }
+    }
+    return count;
+  }, [completions, weekOffset, state.activeInternId]);
+
+  const presentInternsCount = useMemo(
+    () =>
+      SAMPLE_INTERN_ACCOUNTS.filter(
+        (acc) => attendanceByIntern[acc.id]?.present ?? true
+      ).length,
+    [attendanceByIntern]
+  );
+
+  const presentDoneCount = useMemo(
+    () =>
+      SAMPLE_INTERN_ACCOUNTS.filter((acc) => {
+        const isPresent = attendanceByIntern[acc.id]?.present ?? true;
+        if (!isPresent) return false;
+        return Boolean(
+          completions[getCompletionKey(weekOffset, activeDayIndex, acc.id)]
+        );
+      }).length,
+    [attendanceByIntern, completions, weekOffset, activeDayIndex]
+  );
 
   const pendingLabelsCount = useMemo(
     () =>
@@ -94,9 +164,54 @@ function DashboardContent() {
                 {state.profile.roleLabel}
               </span>
               <span className="rounded-md bg-[var(--bg-pill)] px-2 py-0.5 text-[0.7rem] font-medium text-[var(--text-muted)]">
-                Demo account
+                Demo account ({SAMPLE_INTERN_ACCOUNTS.length} interns)
               </span>
             </div>
+          </div>
+        </div>
+
+        {/* Sample 5-Intern Account Switcher */}
+        <div className="mt-3.5 border-t border-[var(--border-subtle)] pt-3">
+          <p className="mb-2 flex items-center gap-1.5 text-[0.7rem] font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase">
+            <Users className="size-3.5 text-[var(--accent-teal)]" aria-hidden="true" />
+            Sample Intern Accounts (Switch para makita ang bawat isa)
+          </p>
+          <div
+            role="group"
+            aria-label="Switch sample intern account"
+            className="flex flex-wrap gap-1.5"
+          >
+            {SAMPLE_INTERN_ACCOUNTS.map((acc) => {
+              const isSelected = acc.id === state.activeInternId;
+              const firstName = acc.fullName.split(" ")[0];
+              return (
+                <button
+                  key={acc.id}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => {
+                    switchInternAccount(acc.id);
+                    setRollError(null);
+                  }}
+                  className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-semibold transition ${
+                    isSelected
+                      ? "border-[var(--border-teal)] bg-[var(--accent-teal-soft)] text-[var(--accent-teal)]"
+                      : "border-[var(--border-subtle)] bg-[var(--bg-card-inner)] text-[var(--text-secondary)] hover:border-[var(--border-control)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="inline-flex size-5 items-center justify-center rounded-full bg-[var(--bg-pill)] text-[0.65rem] font-extrabold"
+                  >
+                    {acc.initials}
+                  </span>
+                  <span>
+                    {firstName}
+                    {acc.isYou ? " (Ikaw)" : ""}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -153,43 +268,412 @@ function DashboardContent() {
         </div>
       )}
 
-      {/* ANG TRABAHO MO (Assigned work links) */}
+      {/* ANG TRABAHO MO · PAGLILINIS (Replaces factory work tasks with rolling cleaning tasks) */}
       <section
         aria-labelledby="trabaho-mo-heading"
         className="ashai-card rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
       >
-        <div className="border-b border-[var(--border-subtle)] px-4 pt-4 pb-2.5">
-          <h2
-            id="trabaho-mo-heading"
-            className="text-xs font-bold tracking-[0.14em] text-[var(--text-muted)] uppercase"
-          >
-            Ang trabaho mo
-          </h2>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] px-4 pt-4 pb-3">
+          <div>
+            <h2
+              id="trabaho-mo-heading"
+              className="text-xs font-bold tracking-[0.14em] text-[var(--text-muted)] uppercase"
+            >
+              Ang trabaho mo · Paglilinis
+            </h2>
+            <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+              Week {weekOffset + 1} ({weekRangeLabel}) · {activeDayFullLabel}
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-2.5 py-1 text-[0.7rem] font-bold text-[var(--accent-teal)]">
+            <Sparkles className="size-3" aria-hidden="true" />
+            {myCompletedCountThisWeek}/5 tapos · Walang doble
+          </span>
         </div>
+
+        {/* Highlighted Today's Cleaning Assignment for Active Intern */}
+        <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-card-inner)] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.7rem] font-extrabold tracking-[0.12em] text-[var(--accent-teal)] uppercase">
+                Naka-assign sa iyo ngayon ({activeDayFullLabel})
+              </p>
+              <p className="mt-1 text-lg font-extrabold text-[var(--text-primary)]">
+                {myTodayTask.title}
+              </p>
+              <p className="mt-0.5 text-sm leading-snug text-[var(--text-secondary)]">
+                {myTodayTask.description}
+              </p>
+            </div>
+            <button
+              type="button"
+              aria-pressed={Boolean(myTodayCompletion)}
+              disabled={!myAttendanceToday.present}
+              onClick={() => {
+                toggleCleaningTaskDone(state.activeInternId);
+                setRollError(null);
+              }}
+              className={`ashai-tap-target shrink-0 rounded-xl px-4 py-2.5 text-xs font-extrabold tracking-wide uppercase transition ${
+                !myAttendanceToday.present
+                  ? "border border-[var(--border-subtle)] bg-[var(--bg-pill)] text-[var(--text-muted)] opacity-60"
+                  : myTodayCompletion
+                    ? "border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] text-[var(--accent-teal)]"
+                    : "bg-[var(--accent-teal)] text-[var(--accent-teal-ink)] hover:bg-[var(--accent-teal-hover)]"
+              }`}
+            >
+              {!myAttendanceToday.present ? (
+                "Absent ngayon"
+              ) : myTodayCompletion ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="size-4" aria-hidden="true" />
+                  Tapos na ({myTodayCompletion.completedAtLabel})
+                </span>
+              ) : (
+                "Markahan na Tapos"
+              )}
+            </button>
+          </div>
+          <p className="mt-2.5 text-xs text-[var(--text-muted)]">
+            Rule: Bawat intern ay may 1 unique na paglilinis bawat araw — hindi
+            mauulit ang natapos na task habang hindi pa natatapos ang buong 5-task
+            cycle ng linggo.
+          </p>
+        </div>
+
+        {/* All 5 Cleaning Tasks List */}
         <ul className="divide-y divide-[var(--border-subtle)]">
-          {INITIAL_ASSIGNED_WORK.map((item) => (
-            <li key={item.id}>
+          {CLEANING_TASKS.map((task) => {
+            // Find which intern is assigned to this task today
+            const assignedTodayIntern = SAMPLE_INTERN_ACCOUNTS.find(
+              (_, idx) =>
+                getAssignedCleaningTask(idx, activeDayIndex, weekOffset).id ===
+                task.id
+            );
+            const assignedTodayDone = assignedTodayIntern
+              ? Boolean(
+                  completions[
+                    getCompletionKey(
+                      weekOffset,
+                      activeDayIndex,
+                      assignedTodayIntern.id
+                    )
+                  ]
+                )
+              : false;
+
+            // Find which day this week the ACTIVE intern has this specific task
+            const myDayForTask = ([0, 1, 2, 3, 4] as WeekdayIndex[]).find(
+              (d) =>
+                getAssignedCleaningTask(activeInternIndex, d, weekOffset).id ===
+                task.id
+            );
+            const myTaskDoneRecord =
+              myDayForTask !== undefined
+                ? completions[
+                    getCompletionKey(weekOffset, myDayForTask, state.activeInternId)
+                  ]
+                : undefined;
+            const isMyTaskToday = myTodayTask.id === task.id;
+
+            return (
+              <li key={task.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCleaningTask(task)}
+                  className={`flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition hover:bg-[var(--bg-card-hover)] ${
+                    isMyTaskToday ? "bg-[rgba(77,196,178,0.06)]" : ""
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-base font-bold text-[var(--text-primary)]">
+                        {task.title}
+                      </span>
+                      {isMyTaskToday ? (
+                        <span className="rounded-md bg-[var(--accent-teal)] px-2 py-0.5 text-[0.68rem] font-extrabold text-[var(--accent-teal-ink)] uppercase">
+                          Ikaw ngayon
+                        </span>
+                      ) : myTaskDoneRecord && myDayForTask !== undefined ? (
+                        <span className="rounded-md border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-2 py-0.5 text-[0.68rem] font-semibold text-[var(--accent-teal)]">
+                          Tapos mo na ({WEEKDAY_LABELS[myDayForTask]})
+                        </span>
+                      ) : myDayForTask !== undefined ? (
+                        <span className="rounded-md bg-[var(--bg-pill)] px-2 py-0.5 text-[0.68rem] font-medium text-[var(--text-muted)]">
+                          Schedule mo: {WEEKDAY_LABELS[myDayForTask]}
+                        </span>
+                      ) : null}
+                    </div>
+                    <span className="mt-0.5 block text-sm leading-snug text-[var(--text-muted)]">
+                      {task.description}
+                    </span>
+                    {assignedTodayIntern ? (
+                      <span className="mt-1 block text-xs text-[var(--text-secondary)]">
+                        Naka-duty ngayon:{" "}
+                        <strong className="font-semibold text-[var(--text-primary)]">
+                          {assignedTodayIntern.fullName}
+                        </strong>{" "}
+                        ·{" "}
+                        <span
+                          className={
+                            assignedTodayDone
+                              ? "font-semibold text-[var(--accent-success)]"
+                              : "text-[var(--accent-amber)]"
+                          }
+                        >
+                          {assignedTodayDone ? "Tapos na" : "Pending"}
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
+                  <ChevronRight
+                    className="size-5 shrink-0 text-[var(--text-muted)]"
+                    aria-hidden="true"
+                  />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {/* AUTOMATIC ROLLING ATTENDANCE & WEEKLY CLEANING SCHEDULE */}
+      <section
+        aria-labelledby="rolling-attendance-heading"
+        className="ashai-card rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2
+              id="rolling-attendance-heading"
+              className="flex items-center gap-1.5 text-xs font-bold tracking-[0.14em] text-[var(--accent-teal)] uppercase"
+            >
+              <CalendarDays className="size-4" aria-hidden="true" />
+              Automatic Rolling Attendance &amp; Schedule
+            </h2>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+              {activeDayFullLabel} · {presentDoneCount}/{presentInternsCount}{" "}
+              present interns ang tapos na sa paglilinis ngayon.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {presentDoneCount < presentInternsCount ? (
               <button
                 type="button"
-                onClick={() => setSelectedTool(item)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition hover:bg-[var(--bg-card-hover)]"
+                onClick={() => {
+                  completeAllPresentToday();
+                  setRollError(null);
+                }}
+                className="min-h-10 rounded-xl border border-[var(--border-control)] bg-[var(--bg-card-inner)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
               >
-                <div className="min-w-0">
-                  <span className="block text-base font-bold text-[var(--text-primary)]">
-                    {item.title}
-                  </span>
-                  <span className="mt-0.5 block text-sm leading-snug text-[var(--text-muted)]">
-                    {item.description}
-                  </span>
-                </div>
-                <ChevronRight
-                  className="size-5 shrink-0 text-[var(--text-muted)]"
-                  aria-hidden="true"
-                />
+                Mark all present done
               </button>
-            </li>
-          ))}
-        </ul>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                const res = advanceRollingDay();
+                if (!res.ok && res.reason) {
+                  setRollError(res.reason);
+                } else {
+                  setRollError(null);
+                }
+              }}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[var(--accent-teal)] px-3.5 py-1.5 text-xs font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)]"
+            >
+              <RefreshCw className="size-3.5" aria-hidden="true" />
+              {activeDayIndex === 4
+                ? "Roll sa Next Week"
+                : "Roll sa Susunod na Araw"}
+            </button>
+          </div>
+        </div>
+
+        {rollError ? (
+          <div
+            role="alert"
+            className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--border-amber)] bg-[var(--accent-amber-soft)] p-3 text-xs text-[var(--accent-amber)]"
+          >
+            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>{rollError}</span>
+          </div>
+        ) : null}
+
+        {/* Today's Rolling Attendance List (5 Interns) */}
+        <div className="mt-4 space-y-2">
+          <p className="text-[0.7rem] font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase">
+            Attendance &amp; Duty Ngayon ({activeDayFullLabel})
+          </p>
+          {SAMPLE_INTERN_ACCOUNTS.map((intern, internIdx) => {
+            const attendance = attendanceByIntern[intern.id] ?? {
+              present: true,
+              timeInLabel: "8:25 AM",
+            };
+            const todayTask = getAssignedCleaningTask(
+              internIdx,
+              activeDayIndex,
+              weekOffset
+            );
+            const doneRecord =
+              completions[getCompletionKey(weekOffset, activeDayIndex, intern.id)];
+            const isActiveAccount = intern.id === state.activeInternId;
+
+            return (
+              <div
+                key={intern.id}
+                className={`flex flex-wrap items-center justify-between gap-2.5 rounded-xl border p-3 ${
+                  isActiveAccount
+                    ? "border-[var(--border-teal)] bg-[var(--bg-card-inner)]"
+                    : "border-[var(--border-subtle)] bg-[var(--bg-card-inner)]/70"
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold text-[var(--text-primary)]">
+                      {intern.fullName}
+                    </span>
+                    {intern.isYou ? (
+                      <span className="rounded bg-[var(--bg-pill)] px-1.5 py-0.5 text-[0.65rem] font-bold text-[var(--accent-teal)]">
+                        Ikaw
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+                    Duty: <strong className="text-[var(--text-primary)]">{todayTask.shortLabel}</strong>{" "}
+                    {attendance.present && attendance.timeInLabel
+                      ? `· Time in ${attendance.timeInLabel}`
+                      : "· Marked Absent"}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    aria-pressed={attendance.present}
+                    onClick={() => {
+                      toggleInternAttendance(intern.id);
+                      setRollError(null);
+                    }}
+                    className={`inline-flex min-h-9 items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
+                      attendance.present
+                        ? "border-[var(--border-teal)] bg-[var(--accent-teal-soft)] text-[var(--accent-teal)]"
+                        : "border-[var(--border-control)] bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    <UserCheck className="size-3.5" aria-hidden="true" />
+                    {attendance.present ? "Present" : "Absent"}
+                  </button>
+
+                  <button
+                    type="button"
+                    aria-pressed={Boolean(doneRecord)}
+                    disabled={!attendance.present}
+                    onClick={() => {
+                      toggleCleaningTaskDone(intern.id);
+                      setRollError(null);
+                    }}
+                    className={`min-h-9 rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                      !attendance.present
+                        ? "border border-[var(--border-subtle)] bg-[var(--bg-pill)] text-[var(--text-muted)] opacity-55"
+                        : doneRecord
+                          ? "border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] text-[var(--accent-teal)]"
+                          : "bg-[var(--accent-teal)] text-[var(--accent-teal-ink)] hover:bg-[var(--accent-teal-hover)]"
+                    }`}
+                  >
+                    {doneRecord ? "Tapos ✓" : "Mark Done"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Weekly 5x5 Rolling Matrix (Proves 0 duplicates per week & per day) */}
+        <div className="mt-5">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[0.7rem] font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase">
+              Weekly Rolling Matrix · Week {weekOffset + 1} ({weekRangeLabel})
+            </p>
+            <span className="text-[0.7rem] text-[var(--text-muted)]">
+              5 interns × 5 tasks · Walang uulit sa buong linggo
+            </span>
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-[var(--border-subtle)]">
+            <table className="w-full min-w-[34rem] border-collapse text-left text-xs">
+              <thead>
+                <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-card-inner)] text-[var(--text-muted)]">
+                  <th scope="col" className="px-3 py-2.5 font-bold">
+                    Intern
+                  </th>
+                  {WEEKDAY_LABELS.map((dayLabel, dayIdx) => (
+                    <th
+                      key={dayLabel}
+                      scope="col"
+                      className={`px-2.5 py-2.5 font-bold ${
+                        dayIdx === activeDayIndex
+                          ? "bg-[var(--accent-teal-soft)] text-[var(--accent-teal)]"
+                          : ""
+                      }`}
+                    >
+                      {dayLabel}
+                      {dayIdx === activeDayIndex ? " · Ngayon" : ""}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-subtle)]">
+                {SAMPLE_INTERN_ACCOUNTS.map((intern, internIdx) => {
+                  const isMe = intern.id === state.activeInternId;
+                  return (
+                    <tr
+                      key={intern.id}
+                      className={isMe ? "bg-[rgba(77,196,178,0.05)]" : ""}
+                    >
+                      <th
+                        scope="row"
+                        className="whitespace-nowrap px-3 py-2.5 font-semibold text-[var(--text-primary)]"
+                      >
+                        {intern.fullName.split(" ")[0]}
+                        {intern.isYou ? " (Ikaw)" : ""}
+                      </th>
+                      {([0, 1, 2, 3, 4] as WeekdayIndex[]).map((dayIdx) => {
+                        const assigned = getAssignedCleaningTask(
+                          internIdx,
+                          dayIdx,
+                          weekOffset
+                        );
+                        const done = Boolean(
+                          completions[getCompletionKey(weekOffset, dayIdx, intern.id)]
+                        );
+                        const isToday = dayIdx === activeDayIndex;
+                        return (
+                          <td
+                            key={dayIdx}
+                            className={`px-2.5 py-2.5 ${
+                              isToday ? "bg-[rgba(77,196,178,0.08)]" : ""
+                            }`}
+                          >
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-medium ${
+                                done
+                                  ? "border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] text-[var(--accent-teal)]"
+                                  : isToday
+                                    ? "bg-[var(--bg-pill)] font-bold text-[var(--text-primary)]"
+                                    : "text-[var(--text-muted)]"
+                              }`}
+                            >
+                              {done ? "✓ " : ""}
+                              {assigned.shortLabel}
+                            </span>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       {/* ORAS KO Summary Card */}
@@ -318,35 +802,77 @@ function DashboardContent() {
         </div>
       </section>
 
-      {/* Assigned Tool Preview Modal */}
+      {/* Cleaning Task Details & Weekly Rotation Modal */}
       <AccessibleModal
-        open={activeTool !== null}
-        onClose={closeToolModal}
-        titleId="assigned-tool-title"
-        title={activeTool?.title ?? ""}
-        subtitle={`${activeTool?.category ?? ""} · Demo tool preview`}
+        open={activeCleaningModal !== null}
+        onClose={closeCleaningModal}
+        titleId="cleaning-task-title"
+        title={activeCleaningModal?.title ?? ""}
+        subtitle={`${activeCleaningModal?.areaLabel ?? ""} · Paglilinis checklist`}
       >
-        {activeTool ? (
+        {activeCleaningModal ? (
           <div className="space-y-4">
             <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
-              {activeTool.demoSummary}
+              {activeCleaningModal.description}
             </p>
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card-inner)] p-3.5">
               <p className="text-xs font-bold tracking-wider text-[var(--accent-teal)] uppercase">
-                Workflow steps (demo)
+                Mga hakbang sa paglilinis
               </p>
               <ul className="mt-2 list-disc space-y-1.5 pl-4 text-sm text-[var(--text-primary)]">
-                {activeTool.demoChecklist.map((step) => (
+                {activeCleaningModal.checklist.map((step) => (
                   <li key={step}>{step}</li>
                 ))}
               </ul>
             </div>
+
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card-inner)] p-3.5">
+              <p className="text-xs font-bold tracking-wider text-[var(--text-muted)] uppercase">
+                Rotation ngayong linggo (Week {weekOffset + 1})
+              </p>
+              <ul className="mt-2 space-y-1.5 text-xs">
+                {([0, 1, 2, 3, 4] as WeekdayIndex[]).map((dayIdx) => {
+                  const internForDay = SAMPLE_INTERN_ACCOUNTS.find(
+                    (_, idx) =>
+                      getAssignedCleaningTask(idx, dayIdx, weekOffset).id ===
+                      activeCleaningModal.id
+                  );
+                  const isDone = internForDay
+                    ? Boolean(
+                        completions[
+                          getCompletionKey(weekOffset, dayIdx, internForDay.id)
+                        ]
+                      )
+                    : false;
+                  return (
+                    <li
+                      key={dayIdx}
+                      className="flex items-center justify-between gap-2 text-[var(--text-secondary)]"
+                    >
+                      <span className="font-semibold text-[var(--text-primary)]">
+                        {WEEKDAY_FULL_LABELS[dayIdx]}
+                        {dayIdx === activeDayIndex ? " (Ngayon)" : ""}
+                      </span>
+                      <span>
+                        {internForDay?.fullName ?? "—"}{" "}
+                        {isDone ? (
+                          <span className="font-semibold text-[var(--accent-teal)]">
+                            · ✓ Tapos
+                          </span>
+                        ) : null}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
             <button
               type="button"
-              onClick={closeToolModal}
+              onClick={closeCleaningModal}
               className="ashai-tap-target w-full rounded-xl bg-[var(--accent-teal)] px-4 py-2.5 text-sm font-bold text-[var(--accent-teal-ink)] hover:bg-[var(--accent-teal-hover)]"
             >
-              Close preview
+              Isara
             </button>
           </div>
         ) : null}

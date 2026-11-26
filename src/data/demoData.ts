@@ -1,11 +1,15 @@
 import type {
-  AssignedWorkLink,
+  CleaningCompletionRecord,
+  CleaningRotationState,
+  CleaningTask,
   ClientLead,
   DemoAppState,
+  InternAccount,
   LabelQueueItem,
   LeadProduct,
   LeadStatus,
   MoreKnowledgeCategory,
+  WeekdayIndex,
   WorkAreaOption,
 } from "@/types/intern";
 
@@ -36,76 +40,189 @@ export const LEAD_STATUSES: LeadStatus[] = [
   "Not a fit",
 ];
 
-export const INITIAL_ASSIGNED_WORK: AssignedWorkLink[] = [
+export const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri"] as const;
+export const WEEKDAY_FULL_LABELS = [
+  "Lunes",
+  "Martes",
+  "Miyerkules",
+  "Huwebes",
+  "Biyernes",
+] as const;
+
+export const SAMPLE_INTERN_ACCOUNTS: InternAccount[] = [
   {
-    id: "stock-count",
-    title: "Stock Count",
+    id: "intern-jericho",
+    fullName: "jericho del Socorro",
+    initials: "JD",
+    roleLabel: "Intern",
+    currentTrack: "IT / software development",
+    isYou: true,
+  },
+  {
+    id: "intern-mica",
+    fullName: "Micaela Santos",
+    initials: "MS",
+    roleLabel: "Intern",
+    currentTrack: "IT QA / testing",
+  },
+  {
+    id: "intern-paolo",
+    fullName: "Paolo Reyes",
+    initials: "PR",
+    roleLabel: "Intern",
+    currentTrack: "IT / software development",
+  },
+  {
+    id: "intern-trisha",
+    fullName: "Trisha Villanueva",
+    initials: "TV",
+    roleLabel: "Intern",
+    currentTrack: "Client outreach",
+  },
+  {
+    id: "intern-kenneth",
+    fullName: "Kenneth Bautista",
+    initials: "KB",
+    roleLabel: "Intern",
+    currentTrack: "IT QA / testing",
+  },
+];
+
+export const CLEANING_TASKS: CleaningTask[] = [
+  {
+    id: "walis-mop",
+    title: "Walis at Mop ng Floor",
+    shortLabel: "Walis & Mop",
     description:
-      "Bilangin ang pabrika — walang presyo, walang PO, hindi nagbabago ang stock.",
-    category: "Stock & Buying",
-    demoSummary:
-      "Demo preview of factory floor counting mode. Interns count physical pieces by rack/section without viewing supplier pricing or altering live inventory.",
-    demoChecklist: [
-      "Piliin ang section o rack label bago magbilang.",
-      "I-record ang aktuwal na bilang kada design at size.",
-      "I-flag kung may hindi tugma sa sticker label (walang stock mutation sa mode na ito).",
+      "Magwalis at mag-mop ng sahig sa main work area, aisle, at walkway ng opisina.",
+    areaLabel: "Main Floor & Walkway",
+    checklist: [
+      "Walisin ang alikabok at maliliit na kalat sa ilalim ng mga mesa at upuan.",
+      "Mag-mop gamit ang malinis na tubig at disinfectant solution.",
+      "Patuyuin ang sahig at ibalik sa ayos ang walis at mop pagkatapos.",
     ],
   },
   {
-    id: "gumawa-ng-sticker",
-    title: "Gumawa ng sticker",
+    id: "punas-mesa",
+    title: "Punas ng Mesa at Workstation",
+    shortLabel: "Punas Mesa",
     description:
-      "Ilang QR sticker kada design at size, at ang mga hakbang — walang PO.",
-    category: "Prepare",
-    demoSummary:
-      "Demo preview for calculating and batching QR garment stickers per design and size breakdown without exposing purchase order details.",
-    demoChecklist: [
-      "I-check ang size breakdown (XS–3XL) para sa assigned batch.",
-      "I-print ang tamang dami ng QR stickers at i-verify ang scan.",
-      "I-mark sa Labels queue kapag naidikit at na-verify na.",
+      "Punasan ang mga mesa, common tables, at ayusin ang mga nakakalat na upuan at gamit.",
+    areaLabel: "Workstations & Tables",
+    checklist: [
+      "Punasan ang ibabaw ng mga mesa gamit ang malinis na basahan at alcohol/cleaner.",
+      "Ibalik sa tamang puwesto ang mga upuan at shared supplies.",
+      "Siguraduhing walang natirang baso o papel sa mga common table.",
     ],
   },
   {
-    id: "ayos-ng-lugar",
-    title: "Ayos ng lugar",
+    id: "tapon-basura",
+    title: "Tapon ng Basura at Retaso",
+    shortLabel: "Basura",
     description:
-      "Ilagay ang mga section, istante, locker, rack at patong ng isang lugar — ang code sa label.",
-    category: "Operations",
-    demoSummary:
-      "Demo preview for mapping physical storage zones (sections, shelves, lockers, racks, and layers) using label codes.",
-    demoChecklist: [
-      "Tiyakin na may malinaw na location code ang bawat istante o rack.",
-      "I-assign ang tamang zone/patong level bago maglagay ng bagong batch.",
+      "Kolektahin ang lahat ng basurahan, itapon sa tamang tapunan, at palitan ng bagong liner.",
+    areaLabel: "Trash Bins & Disposal",
+    checklist: [
+      "Ipunin ang basura mula sa workstation bins, pantry, at common area.",
+      "Ihiwalay ang nabubulok, di-nabubulok, at malilinis na scrap/papel.",
+      "Maglagay ng bagong trash bag sa bawat basurahan.",
     ],
   },
   {
-    id: "scanner",
-    title: "Scanner",
+    id: "ayos-pantry",
+    title: "Ayos ng Pantry at Drinking Area",
+    shortLabel: "Pantry",
     description:
-      "I-scan ang label ng lugar para makita ang laman at dami, o ang sticker ng gamit para makita kung nasaan.",
-    category: "Stock & Buying",
-    demoSummary:
-      "Demo lookup preview simulating QR label scanning for location contents or item whereabouts.",
-    demoChecklist: [
-      "Sample location code: RACK-A2-L3 (32 pcs assorted tees)",
-      "Sample sticker tag: ASH-QR-1048 (Prep Table 2 · Ready for packing)",
+      "Linisin ang lababo, punasan ang water dispenser at counter, at ayusin ang pantry area.",
+    areaLabel: "Pantry & Sink",
+    checklist: [
+      "Punasan ang counter, microwave/oven top, at paligid ng water dispenser.",
+      "Siguraduhing malinis ang lababo at walang baradong food scraps.",
+      "I-check kung may stock pa ng dishwashing liquid at sponge.",
     ],
   },
   {
-    id: "locations",
-    title: "Locations",
+    id: "linis-cr",
+    title: "Linis ng CR at Hugasan",
+    shortLabel: "CR & Hugasan",
     description:
-      "Pumili ng istante, locker o table para makita ang laman — walang scan.",
-    category: "Stock & Buying",
-    demoSummary:
-      "Manual browse view for shelves, lockers, and prep tables when a camera scanner is not available.",
-    demoChecklist: [
-      "Prep Table 1 — 48 pending QR stickers",
-      "Rack B1 · Shelf 2 — Cotton hoodies (M, L, XL)",
-      "Locker 4 — Packing tapes & thermal rolls",
+      "Linisin ang CR, salamin, at hugasan ng kamay; i-check ang sabon at tissue stock.",
+    areaLabel: "Restroom & Wash Area",
+    checklist: [
+      "Punasan ang salamin, lababo, at gripo sa hugasan ng kamay.",
+      "Buhusan at linisin ang sahig at toilet bowl ng CR.",
+      "I-check at i-refill kung kailangan ang hand soap at tissue.",
     ],
   },
 ];
+
+export function getCompletionKey(
+  weekOffset: number,
+  dayIndex: number,
+  internId: string
+): string {
+  return `${weekOffset}:${dayIndex}:${internId}`;
+}
+
+/**
+ * Deterministic 5x5 Latin Square rotation:
+ * - Every intern gets 5 distinct cleaning tasks across Mon–Fri (zero duplicates in a week).
+ * - On any given day, all 5 interns have 5 distinct tasks (zero overlap on the same day).
+ * - Advancing weekOffset shifts the starting task by 1 so the weekly order also rolls fairly.
+ */
+export function getAssignedCleaningTask(
+  internIndex: number,
+  dayIndex: WeekdayIndex,
+  weekOffset: number
+): CleaningTask {
+  const count = CLEANING_TASKS.length;
+  const idx = (((internIndex + dayIndex + weekOffset) % count) + count) % count;
+  return CLEANING_TASKS[idx];
+}
+
+export function getInternIndex(internId: string): number {
+  const idx = SAMPLE_INTERN_ACCOUNTS.findIndex((acc) => acc.id === internId);
+  return idx >= 0 ? idx : 0;
+}
+
+export function getWeekDateRangeLabel(weekOffset: number): string {
+  const baseMonday = new Date(2026, 10, 23); // Mon, Nov 23, 2026
+  const start = new Date(baseMonday);
+  start.setDate(baseMonday.getDate() + weekOffset * 7);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 4);
+  const fmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+  return `${fmt.format(start)} – ${fmt.format(end)}, ${end.getFullYear()}`;
+}
+
+function buildInitialCompletions(): Record<string, CleaningCompletionRecord> {
+  const completions: Record<string, CleaningCompletionRecord> = {};
+  const completedTimes = ["4:35 PM", "4:42 PM", "4:48 PM", "4:50 PM", "4:55 PM"];
+  // Mon (0), Tue (1), Wed (2) already completed in Week 1; Thu (3) is today (active)
+  for (let day = 0; day < 3; day++) {
+    SAMPLE_INTERN_ACCOUNTS.forEach((intern, internIdx) => {
+      const task = getAssignedCleaningTask(internIdx, day as WeekdayIndex, 0);
+      completions[getCompletionKey(0, day, intern.id)] = {
+        completedAtLabel: completedTimes[(internIdx + day) % completedTimes.length],
+        taskId: task.id,
+      };
+    });
+  }
+  return completions;
+}
+
+export const INITIAL_CLEANING_ROTATION: CleaningRotationState = {
+  weekOffset: 0,
+  activeDayIndex: 3, // Thu, Nov 26 · ngayon
+  attendanceByIntern: {
+    "intern-jericho": { present: true, timeInLabel: "8:25 AM" },
+    "intern-mica": { present: true, timeInLabel: "8:18 AM" },
+    "intern-paolo": { present: true, timeInLabel: "8:30 AM" },
+    "intern-trisha": { present: true, timeInLabel: "8:12 AM" },
+    "intern-kenneth": { present: true, timeInLabel: "8:22 AM" },
+  },
+  completions: buildInitialCompletions(),
+};
 
 export const INITIAL_LABEL_JOBS: LabelQueueItem[] = [
   {
@@ -240,6 +357,7 @@ export const SAMPLE_DEMO_LEADS: ClientLead[] = [
 
 export const INITIAL_DEMO_STATE: DemoAppState = {
   signedIn: true,
+  activeInternId: "intern-jericho",
   notificationsEnabled: false,
   notificationPromptDismissed: false,
   timedIn: true,
@@ -253,6 +371,7 @@ export const INITIAL_DEMO_STATE: DemoAppState = {
     targetHours: 240,
     currentTrack: "IT / software development",
   },
+  cleaningRotation: INITIAL_CLEANING_ROTATION,
   workdays: [
     {
       id: "day-2026-11-26",
