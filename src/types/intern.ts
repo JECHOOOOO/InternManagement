@@ -23,7 +23,6 @@ export interface WorkdayLog {
 export type RequestCategory =
   | "Leave"
   | "Materials"
-  | "Cash Advance"
   | "Time-in correction";
 
 export type LeaveType =

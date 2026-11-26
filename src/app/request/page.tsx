@@ -5,7 +5,6 @@ import {
   AlertCircle,
   Calendar,
   Check,
-  Coins,
   History,
   Package,
   Trash2,
@@ -37,16 +36,6 @@ const REQUEST_TYPES: {
       "I-lista ang eksaktong gamit, sukat, o thermal roll na kailangan sa trabaho.",
       "Ipapakita sa demo list sa ibaba para ma-track habang wala pang approval.",
       "Demo workflow only — hindi ito nagsusumite sa live purchasing backend.",
-    ],
-  },
-  {
-    id: "Cash Advance",
-    label: "Cash Advance",
-    icon: Coins,
-    guidance: [
-      "Ilagay ang halaga at malinaw na dahilan bago i-submit.",
-      "Demo workflow only — company approval limits at cut-off rules ay nasa internal policy.",
-      "Makikita ang demo record sa My Requests sa ibaba.",
     ],
   },
   {
@@ -87,10 +76,6 @@ export default function RequestPage() {
   const [materialQty, setMaterialQty] = useState("");
   const [materialNeededBy, setMaterialNeededBy] = useState("");
 
-  // Cash Advance fields
-  const [cashAmount, setCashAmount] = useState("");
-  const [cashNeededBy, setCashNeededBy] = useState("");
-
   // Time-in correction fields
   const [correctionDate, setCorrectionDate] = useState("");
   const [correctionKind, setCorrectionKind] = useState("Missed time-in");
@@ -123,11 +108,6 @@ export default function RequestPage() {
       if (!materialQty.trim()) {
         map.materialQty = "Enter the quantity and unit (e.g. 2 rolls).";
       }
-    } else if (category === "Cash Advance") {
-      const amountNum = Number(cashAmount);
-      if (!cashAmount || Number.isNaN(amountNum) || amountNum <= 0) {
-        map.cashAmount = "Enter a valid amount greater than 0.";
-      }
     } else if (category === "Time-in correction") {
       if (!correctionDate) map.correctionDate = "Pick the affected workday.";
       if (!correctionTime) map.correctionTime = "Enter the actual time.";
@@ -144,7 +124,6 @@ export default function RequestPage() {
     leaveDays,
     materialName,
     materialQty,
-    cashAmount,
     correctionDate,
     correctionTime,
     reason,
@@ -191,17 +170,6 @@ export default function RequestPage() {
       setMaterialName("");
       setMaterialQty("");
       setMaterialNeededBy("");
-    } else if (category === "Cash Advance") {
-      addRequest({
-        category: "Cash Advance",
-        title: `PHP ${Number(cashAmount).toLocaleString("en-PH")}`,
-        summary: cashNeededBy
-          ? `Needed by ${cashNeededBy}`
-          : "Payroll / office advance (demo)",
-        details: reason.trim(),
-      });
-      setCashAmount("");
-      setCashNeededBy("");
     } else {
       addRequest({
         category: "Time-in correction",
@@ -229,11 +197,11 @@ export default function RequestPage() {
         </p>
       </div>
 
-      {/* 2x2 Category Selector */}
+      {/* 3-Column Category Selector */}
       <div
         role="group"
         aria-label="Request categories"
-        className="grid grid-cols-2 gap-3"
+        className="grid grid-cols-3 gap-2.5 sm:gap-3"
       >
         {REQUEST_TYPES.map((item) => {
           const Icon = item.icon;
@@ -528,66 +496,6 @@ export default function RequestPage() {
                 </div>
               </div>
             </>
-          ) : null}
-
-          {category === "Cash Advance" ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="req-cashAmount"
-                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
-                >
-                  Amount (PHP) <span aria-hidden="true">*</span>
-                </label>
-                <input
-                  id="req-cashAmount"
-                  name="cashAmount"
-                  type="number"
-                  inputMode="decimal"
-                  min="1"
-                  required
-                  value={cashAmount}
-                  placeholder="0.00"
-                  aria-invalid={showError("cashAmount") ? "true" : "false"}
-                  aria-describedby={
-                    showError("cashAmount") ? "err-cashAmount" : undefined
-                  }
-                  onChange={(e) => setCashAmount(e.target.value)}
-                  onBlur={() =>
-                    setTouched((prev) => ({ ...prev, cashAmount: true }))
-                  }
-                  className={`ashai-control ${
-                    showError("cashAmount") ? "user-invalid-fallback" : ""
-                  }`}
-                />
-                {showError("cashAmount") ? (
-                  <p
-                    id="err-cashAmount"
-                    className="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--accent-danger)]"
-                  >
-                    <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
-                    <span>{errors.cashAmount}</span>
-                  </p>
-                ) : null}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="req-cashNeededBy"
-                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
-                >
-                  Needed by
-                </label>
-                <input
-                  id="req-cashNeededBy"
-                  name="cashNeededBy"
-                  type="date"
-                  value={cashNeededBy}
-                  onChange={(e) => setCashNeededBy(e.target.value)}
-                  className="ashai-control"
-                />
-              </div>
-            </div>
           ) : null}
 
           {category === "Time-in correction" ? (
