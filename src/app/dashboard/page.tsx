@@ -8,7 +8,6 @@ import {
   Camera,
   CheckCircle2,
   Clock,
-  FilePenLine,
   MessageSquare,
   Sticker,
   Trash2,
@@ -438,7 +437,7 @@ function DashboardContent() {
         </p>
       </Link>
 
-      {/* Quick Tiles Grid (Oras, Request, Chat) */}
+      {/* Quick Tiles Grid (Oras, Chat) */}
       <section aria-label="Quick shortcuts" className="grid grid-cols-2 gap-3">
         <Link
           href="/oras"
@@ -460,28 +459,10 @@ function DashboardContent() {
           </span>
         </Link>
 
-        <Link
-          href="/request"
-          className="ashai-card rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4 transition hover:bg-[var(--bg-card-hover)]"
-        >
-          <FilePenLine
-            className="size-5 text-[var(--text-secondary)]"
-            aria-hidden="true"
-          />
-          <span className="mt-3 block text-base font-bold text-[var(--text-primary)]">
-            Request
-          </span>
-          <span className="mt-0.5 block text-sm text-[var(--text-muted)]">
-            {state.requests.length === 0
-              ? "wala pa"
-              : `${state.requests.length} pending (demo)`}
-          </span>
-        </Link>
-
         <button
           type="button"
           onClick={() => setChatOpen(true)}
-          className="ashai-card col-span-2 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4 text-left transition hover:bg-[var(--bg-card-hover)] sm:col-span-1"
+          className="ashai-card rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4 text-left transition hover:bg-[var(--bg-card-hover)]"
         >
           <MessageSquare
             className="size-5 text-[var(--text-secondary)]"

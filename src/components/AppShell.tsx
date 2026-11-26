@@ -6,12 +6,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   Clock,
-  FilePenLine,
   Home,
   MoreHorizontal,
   Search,
   Sparkles,
-  Users,
 } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
 import { useInternApp } from "@/context/InternAppContext";
@@ -29,8 +27,6 @@ const NAV_ITEMS: {
 }[] = [
   { href: "/dashboard", label: "Home", matchPrefixes: ["/dashboard", "/"], icon: Home },
   { href: "/oras", label: "Oras", matchPrefixes: ["/oras"], icon: Clock },
-  { href: "/me/leads", label: "Leads", matchPrefixes: ["/me/leads", "/leads"], icon: Users },
-  { href: "/request", label: "Request", matchPrefixes: ["/request"], icon: FilePenLine },
   { href: "/more", label: "More", matchPrefixes: ["/more"], icon: MoreHorizontal },
 ];
 
@@ -80,15 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       }))
     );
 
-    const leads = state.leads.map((lead) => ({
-      id: `lead-${lead.id}`,
-      group: "My leads",
-      title: lead.businessName,
-      subtitle: `${lead.product} · ${lead.status}`,
-      href: "/me/leads",
-    }));
-
-    const all = [...pages, ...tasks, ...knowledge, ...leads];
+    const all = [...pages, ...tasks, ...knowledge];
     if (!q) return all.slice(0, 8);
     return all.filter(
       (entry) =>
@@ -96,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         entry.subtitle.toLowerCase().includes(q) ||
         entry.group.toLowerCase().includes(q)
     );
-  }, [searchQuery, state.leads]);
+  }, [searchQuery]);
 
   if (!state.signedIn) {
     return (
@@ -308,7 +296,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         aria-label="Primary"
         className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--border-subtle)] bg-[var(--bg-header)]/98 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
       >
-        <ul className="mx-auto grid max-w-2xl grid-cols-5">
+        <ul className="mx-auto grid max-w-2xl grid-cols-3">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = activeHref === item.href;
@@ -369,7 +357,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="e.g. Paglilinis, Oras, Leave, Leads..."
+              placeholder="e.g. Paglilinis, Oras, More..."
               autoCorrect="off"
               autoCapitalize="none"
               spellCheck={false}
