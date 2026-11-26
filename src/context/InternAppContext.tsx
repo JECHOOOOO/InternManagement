@@ -31,7 +31,7 @@ import type {
 
 const SESSION_KEY = "ashai-intern-session-v5";
 const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v5:";
-const ROSTER_KEY = "ashai-intern-cleaning-roster-v4";
+const ROSTER_KEY = "ashai-intern-cleaning-roster-v5";
 const THEME_KEY = "ashai-theme-v1";
 
 export type AppTheme = "dark" | "light";
