@@ -1,4 +1,4 @@
-export type NavRoute = "/dashboard" | "/oras" | "/more";
+export type NavRoute = "/dashboard" | "/oras" | "/me/leads" | "/request" | "/more";
 
 export type WorkAreaOption =
   | "Other"
