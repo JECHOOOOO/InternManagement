@@ -141,7 +141,7 @@ function DashboardContent() {
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-extrabold leading-snug tracking-tight text-[var(--text-primary)] break-words">
+            <h1 className="font-display text-xl font-bold leading-snug tracking-tight text-[var(--text-primary)] break-words">
               Good morning, {state.profile.fullName}
             </h1>
             <div className="mt-0.5 flex flex-wrap items-center gap-2">
@@ -164,7 +164,7 @@ function DashboardContent() {
         >
           <h2
             id="abiso-heading"
-            className="text-xs font-extrabold tracking-[0.14em] text-[var(--accent-teal)] uppercase"
+            className="font-display text-xs font-bold tracking-[0.14em] text-[var(--accent-teal)] uppercase"
           >
             Abiso sa telepono
           </h2>
@@ -176,7 +176,7 @@ function DashboardContent() {
             <button
               type="button"
               onClick={() => void toggleNotifications(true)}
-              className="ashai-tap-target flex-1 rounded-xl bg-[var(--accent-teal)] px-4 py-3 text-sm font-extrabold tracking-wide text-[var(--accent-teal-ink)] uppercase transition hover:bg-[var(--accent-teal-hover)]"
+              className="font-display ashai-tap-target flex-1 rounded-xl bg-[var(--accent-teal)] px-4 py-3 text-sm font-extrabold tracking-wide text-[var(--accent-teal-ink)] uppercase transition hover:bg-[var(--accent-teal-hover)]"
             >
               I-ON ANG ABISO
             </button>
@@ -251,7 +251,7 @@ function DashboardContent() {
           <div className="mt-3.5 space-y-3.5">
             {/* Post Time-In Assignment Banner */}
             <div className="rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] p-4">
-              <p className="text-base font-extrabold text-[var(--text-primary)]">
+              <p className="font-display text-base font-bold text-[var(--text-primary)]">
                 Ikaw ang nakatask ngayon sa paglilinis
               </p>
               <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
@@ -424,7 +424,7 @@ function DashboardContent() {
           Oras ko
         </p>
         <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
-          <span className="text-4xl font-extrabold tracking-tight text-[var(--accent-teal)]">
+          <span className="font-display text-4xl font-extrabold tracking-tight text-[var(--accent-teal)]">
             {state.totalLoggedHours.toFixed(2)}
           </span>
           <span className="text-sm text-[var(--text-secondary)]">

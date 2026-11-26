@@ -1,14 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { DM_Sans, Syne } from "next/font/google";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { InternAppProvider } from "@/context/InternAppContext";
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-ashai",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ashai-sans",
+  display: "swap",
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-ashai-display",
   display: "swap",
 });
 
@@ -31,7 +38,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={plusJakartaSans.variable}>
+    <html lang="en" className={`${dmSans.variable} ${syne.variable}`}>
       <body className="font-sans antialiased">
         <InternAppProvider>
           <AppShell>{children}</AppShell>
