@@ -57,7 +57,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sidebarQuery, setSidebarQuery] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [prepareOpen, setPrepareOpen] = useState(true);
   const [stockBuyingOpen, setStockBuyingOpen] = useState(true);
@@ -113,15 +112,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     [state.labelJobs]
   );
 
-  const sidebarFilter = sidebarQuery.trim().toLowerCase();
   const desktopPrimaryLinks = [
     { href: "/oras" as NavRoute, label: "Oras at reports" },
     { href: "/me/leads" as NavRoute, label: "Leads" },
     { href: "/request" as NavRoute, label: "Request" },
     { href: "/more" as NavRoute, label: "Profile" },
-  ].filter(
-    (item) => !sidebarFilter || item.label.toLowerCase().includes(sidebarFilter)
-  );
+  ];
 
   const prepareLinks = [
     {
@@ -129,22 +125,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       label: "Labels",
       badge: pendingLabelsCount,
     },
-  ].filter(
-    (item) =>
-      !sidebarFilter ||
-      item.label.toLowerCase().includes(sidebarFilter) ||
-      "prepare".includes(sidebarFilter)
-  );
+  ];
 
   const stockBuyingLinks = [
     { href: "/more?q=Stock%20Count", label: "Stock Count" },
     { href: "/more?q=Stock%20Count", label: "Stock Count Settings" },
-  ].filter(
-    (item) =>
-      !sidebarFilter ||
-      item.label.toLowerCase().includes(sidebarFilter) ||
-      "stock & buying".includes(sidebarFilter)
-  );
+  ];
 
   const allSidebarExpanded = prepareOpen && stockBuyingOpen;
 
@@ -446,33 +432,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </button>
               </div>
 
-              {/* Sidebar Search */}
-              <div className="relative mt-4">
-                <Search
-                  className={`pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 ${
-                    isLight ? "text-[#74908a]" : "text-[#6b817c]"
-                  }`}
-                  aria-hidden="true"
-                />
-                <input
-                  type="search"
-                  value={sidebarQuery}
-                  onChange={(e) => setSidebarQuery(e.target.value)}
-                  placeholder="Search (e.g. mass cut)"
-                  aria-label="Search sidebar menu"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  className={`w-full rounded-xl border py-2.5 pr-3 pl-10 text-sm outline-none transition ${
-                    isLight
-                      ? "border-[#1d3430] bg-[#132624] text-[#e9f2f0] placeholder:text-[#6e8a84] focus:border-[#4dc4b2]"
-                      : "border-[#bed3cd] bg-[#cfe0dc] text-[#172623] placeholder:text-[#6e847f] focus:border-[#0e7c6b]"
-                  }`}
-                />
-              </div>
-
               {/* Collapse all / Expand all */}
-              <div className="mt-2.5 flex justify-end">
+              <div className="mt-4 flex justify-end">
                 <button
                   type="button"
                   onClick={() => {
