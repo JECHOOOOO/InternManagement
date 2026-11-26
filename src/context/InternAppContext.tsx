@@ -29,9 +29,9 @@ import type {
   WorkAreaOption,
 } from "@/types/intern";
 
-const SESSION_KEY = "ashai-intern-session-v5";
-const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v5:";
-const ROSTER_KEY = "ashai-intern-cleaning-roster-v5";
+const SESSION_KEY = "ashai-intern-session-v6";
+const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v6:";
+const ROSTER_KEY = "ashai-intern-cleaning-roster-v6";
 const THEME_KEY = "ashai-theme-v1";
 
 export type AppTheme = "dark" | "light";
@@ -82,22 +82,47 @@ const listeners = new Set<Listener>();
 let clientCachedState: DemoAppState | null = null;
 
 /**
- * Picks up to 3 interns for the next cleaning day using strict level-by-level fairness:
- * - Finds the minimum cleaning count across all interns (e.g., 0 during the 1-1-1 round, 1 during 2-2-2, etc.).
- * - Selects up to CLEANERS_PER_DAY (3) interns who are still at that minimum count.
- * - Guarantees NO intern ever gets assigned for count k+1 while ANY intern is still at count k.
+ * Checks whether an intern who just timed in (with a photo) should be added to today's
+ * cleaning group (up to CLEANERS_PER_DAY = 3 per day), strictly enforcing 1-1-1 before 2-2-2:
+ * - Computes the minimum cleaning count across all interns.
+ * - Only assigns the intern if their count equals minCount and fewer than 3 cleaners are assigned today.
  */
-function pickNextBatchAccountIds(
-  totalCleaningsByAccount: Record<string, number>
-): string[] {
+function assignOnTimeInIfEligible(
+  roster: SharedCleaningRosterState,
+  accountId: string
+): SharedCleaningRosterState {
+  const timedInTodayAccountIds = roster.timedInTodayAccountIds.includes(accountId)
+    ? roster.timedInTodayAccountIds
+    : [...roster.timedInTodayAccountIds, accountId];
+
+  if (
+    roster.assignedAccountIds.includes(accountId) ||
+    roster.assignedAccountIds.length >= CLEANERS_PER_DAY
+  ) {
+    return {
+      ...roster,
+      timedInTodayAccountIds,
+    };
+  }
+
   const counts = DEMO_ACCOUNTS.map(
-    (acc) => totalCleaningsByAccount[acc.id] ?? 0
+    (acc) => roster.totalCleaningsByAccount[acc.id] ?? 0
   );
   const minCount = Math.min(...counts);
-  const eligible = DEMO_ACCOUNTS.filter(
-    (acc) => (totalCleaningsByAccount[acc.id] ?? 0) === minCount
-  );
-  return eligible.slice(0, CLEANERS_PER_DAY).map((acc) => acc.id);
+  const myCount = roster.totalCleaningsByAccount[accountId] ?? 0;
+
+  if (myCount === minCount) {
+    return {
+      ...roster,
+      timedInTodayAccountIds,
+      assignedAccountIds: [...roster.assignedAccountIds, accountId],
+    };
+  }
+
+  return {
+    ...roster,
+    timedInTodayAccountIds,
+  };
 }
 
 function areAllAssignedDone(roster: SharedCleaningRosterState): boolean {
@@ -119,7 +144,8 @@ function normalizeRoster(
   const base: SharedCleaningRosterState = {
     dayNumber: INITIAL_CLEANING_ROSTER.dayNumber,
     lastCalendarDate: todayIso,
-    assignedAccountIds: [...INITIAL_CLEANING_ROSTER.assignedAccountIds],
+    timedInTodayAccountIds: [],
+    assignedAccountIds: [],
     completedTodayByAccount: {},
     totalCleaningsByAccount: baseCounts,
   };
@@ -135,6 +161,12 @@ function normalizeRoster(
     }
   }
 
+  const validTimedIn = Array.isArray(parsed.timedInTodayAccountIds)
+    ? parsed.timedInTodayAccountIds.filter((id) =>
+        DEMO_ACCOUNTS.some((acc) => acc.id === id)
+      )
+    : [];
+
   const validAssigned = Array.isArray(parsed.assignedAccountIds)
     ? parsed.assignedAccountIds.filter((id) =>
         DEMO_ACCOUNTS.some((acc) => acc.id === id)
@@ -148,10 +180,8 @@ function normalizeRoster(
       typeof parsed.lastCalendarDate === "string"
         ? parsed.lastCalendarDate
         : todayIso,
-    assignedAccountIds:
-      validAssigned.length > 0
-        ? validAssigned
-        : pickNextBatchAccountIds(validCounts),
+    timedInTodayAccountIds: validTimedIn,
+    assignedAccountIds: validAssigned,
     completedTodayByAccount:
       parsed.completedTodayByAccount &&
       typeof parsed.completedTodayByAccount === "object"
@@ -160,16 +190,15 @@ function normalizeRoster(
     totalCleaningsByAccount: validCounts,
   };
 
-  // Automatic real-day roll ONLY if all assigned interns for yesterday completed cleaning
+  // Automatic real-day roll ONLY if all assigned interns for yesterday completed cleaning (or none assigned)
   if (merged.lastCalendarDate !== todayIso) {
-    if (areAllAssignedDone(merged)) {
+    if (merged.assignedAccountIds.length === 0 || areAllAssignedDone(merged)) {
       return {
         ...merged,
         dayNumber: merged.dayNumber + 1,
         lastCalendarDate: todayIso,
-        assignedAccountIds: pickNextBatchAccountIds(
-          merged.totalCleaningsByAccount
-        ),
+        timedInTodayAccountIds: [],
+        assignedAccountIds: [],
         completedTodayByAccount: {},
       };
     }
@@ -352,7 +381,7 @@ interface InternAppContextValue {
   announce: (msg: string) => void;
   toggleNotifications: (enabled: boolean) => Promise<void>;
   dismissNotificationPrompt: () => void;
-  toggleTimeInOut: (trackName?: string) => void;
+  toggleTimeInOut: (trackName?: string, timeInPhotoDataUrl?: string) => void;
   saveWorkdayAccomplishment: (
     dayId: string,
     workArea: WorkAreaOption,
@@ -462,7 +491,7 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
   }, [announce]);
 
   const toggleTimeInOut = useCallback(
-    (trackName?: string) => {
+    (trackName?: string, timeInPhotoDataUrl?: string) => {
       const nowLabel = formatCurrentTimeLabel();
       let wasTimedIn = false;
       updateStore((prev) => {
@@ -498,12 +527,18 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
             }
             : day
         );
+        const updatedRoster = assignOnTimeInIfEligible(
+          prev.cleaningRoster,
+          prev.accountId
+        );
         return {
           ...prev,
           timedIn: true,
+          timeInPhotoDataUrl: timeInPhotoDataUrl ?? prev.timeInPhotoDataUrl,
           activeShiftStartLabel: nowLabel,
           activeShiftTrack: nextTrack,
           workdays: updatedDays,
+          cleaningRoster: updatedRoster,
         };
       });
       announce(
@@ -742,31 +777,30 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
   const advanceCleaningDay = useCallback((): { ok: boolean; reason?: string } => {
     const current = readSnapshot();
     const roster = current.cleaningRoster;
-    if (!areAllAssignedDone(roster)) {
+    if (roster.assignedAccountIds.length > 0 && !areAllAssignedDone(roster)) {
       const reason =
         "Hindi pa pwedeng umusad — hindi pa tapos ang lahat ng nakatask sa paglilinis ngayong araw.";
       announce(reason);
       return { ok: false, reason };
     }
 
-    const nextAssignedIds = pickNextBatchAccountIds(
-      roster.totalCleaningsByAccount
-    );
-
     updateStore((prev) => ({
       ...prev,
+      timedIn: false,
+      timeInPhotoDataUrl: undefined,
       cleaningDuty: {
         reminderTriggeredAt430: false,
       },
       cleaningRoster: {
         ...prev.cleaningRoster,
         dayNumber: prev.cleaningRoster.dayNumber + 1,
-        assignedAccountIds: nextAssignedIds,
+        timedInTodayAccountIds: [],
+        assignedAccountIds: [],
         completedTodayByAccount: {},
       },
     }));
 
-    announce("Nag-roll na sa susunod na araw sa loob ng system.");
+    announce("Bagong araw na — mag-time in at kumuha ng picture para sa rolling attendance.");
     return { ok: true };
   }, [announce]);
 

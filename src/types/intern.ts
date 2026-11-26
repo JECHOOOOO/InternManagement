@@ -82,7 +82,9 @@ export interface CleaningProofRecord {
 export interface SharedCleaningRosterState {
   dayNumber: number;
   lastCalendarDate: string;
-  /** Up to 3 intern account IDs assigned to clean today */
+  /** Intern account IDs who have actually timed in (with photo) today */
+  timedInTodayAccountIds: string[];
+  /** Up to 3 timed-in intern account IDs assigned to clean today */
   assignedAccountIds: string[];
   /** Per-account proof submitted today, keyed by accountId */
   completedTodayByAccount: Record<string, CleaningProofRecord>;
@@ -140,6 +142,7 @@ export interface DemoAppState {
   notificationsEnabled: boolean;
   notificationPromptDismissed: boolean;
   timedIn: boolean;
+  timeInPhotoDataUrl?: string;
   activeShiftStartLabel: string;
   activeShiftTrack: string;
   totalLoggedHours: number;

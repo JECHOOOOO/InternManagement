@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   AlertCircle,
+  Camera,
   CheckCircle2,
   ChevronRight,
   LogIn,
@@ -205,6 +206,26 @@ export default function OrasPage() {
   );
   const [timeOutModalOpen, setTimeOutModalOpen] = useState(false);
   const [nextShiftTrack, setNextShiftTrack] = useState(state.activeShiftTrack);
+  const [timeInPhotoUrl, setTimeInPhotoUrl] = useState<string | null>(null);
+  const [timeInPhotoError, setTimeInPhotoError] = useState<string | null>(null);
+
+  const handleTimeInPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setTimeInPhotoError("Pumili lamang ng image file.");
+      return;
+    }
+    setTimeInPhotoError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setTimeInPhotoUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   const targetHours = state.profile.targetHours || 240;
   const pct = Math.min(
@@ -315,13 +336,23 @@ export default function OrasPage() {
 
         {state.timedIn ? (
           <div className="mt-2.5 space-y-3.5">
-            <div>
-              <p className="text-lg font-extrabold text-[var(--text-primary)]">
-                {state.activeShiftTrack}
-              </p>
-              <p className="mt-0.5 text-sm text-[var(--text-secondary)]">
-                Thu, Nov 26 · pumasok {state.activeShiftStartLabel}
-              </p>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-lg font-extrabold text-[var(--text-primary)]">
+                  {state.activeShiftTrack}
+                </p>
+                <p className="mt-0.5 text-sm text-[var(--text-secondary)]">
+                  Thu, Nov 26 · pumasok {state.activeShiftStartLabel}
+                </p>
+              </div>
+              {state.timeInPhotoDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={state.timeInPhotoDataUrl}
+                  alt="Time-in attendance photo"
+                  className="size-14 shrink-0 rounded-xl border border-[var(--border-teal)] object-cover"
+                />
+              ) : null}
             </div>
             <button
               type="button"
@@ -336,7 +367,15 @@ export default function OrasPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              toggleTimeInOut(nextShiftTrack);
+              if (!timeInPhotoUrl) {
+                setTimeInPhotoError(
+                  "Kumuha muna ng picture bago mag-Time in."
+                );
+                return;
+              }
+              toggleTimeInOut(nextShiftTrack, timeInPhotoUrl);
+              setTimeInPhotoUrl(null);
+              setTimeInPhotoError(null);
             }}
             className="mt-3 space-y-3"
           >
@@ -362,12 +401,62 @@ export default function OrasPage() {
                 <option value="Stock Count">Stock Count</option>
               </select>
             </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-bold tracking-wider text-[var(--text-muted)] uppercase">
+                Time-in picture (Required)
+              </p>
+              <label className="ashai-tap-target inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-4 py-2.5 text-xs font-extrabold tracking-wide text-[var(--accent-teal)] uppercase transition hover:bg-[rgba(77,196,178,0.22)]">
+                <Camera className="size-4" aria-hidden="true" />
+                <span>{timeInPhotoUrl ? "Retake picture" : "Take a picture"}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleTimeInPhotoChange}
+                  className="sr-only"
+                />
+              </label>
+
+              {timeInPhotoError ? (
+                <p
+                  role="alert"
+                  className="text-xs font-semibold text-[var(--accent-danger)]"
+                >
+                  {timeInPhotoError}
+                </p>
+              ) : null}
+
+              {timeInPhotoUrl ? (
+                <div className="space-y-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card-inner)] p-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-[var(--accent-teal)]">
+                      Picture ready
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setTimeInPhotoUrl(null)}
+                      className="font-semibold text-[var(--accent-danger)] hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={timeInPhotoUrl}
+                    alt="Time-in photo preview"
+                    className="max-h-48 w-full rounded-lg border border-[var(--border-subtle)] object-cover"
+                  />
+                </div>
+              ) : null}
+            </div>
+
             <button
               type="submit"
               className="ashai-tap-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent-teal)] px-4 py-3 text-base font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)]"
             >
               <LogIn className="size-5" aria-hidden="true" />
-              <span>Time in (Demo)</span>
+              <span>Time in</span>
             </button>
           </form>
         )}

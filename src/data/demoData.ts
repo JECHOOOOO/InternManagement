@@ -62,7 +62,8 @@ export const CLEANERS_PER_DAY = 3;
 export const INITIAL_CLEANING_ROSTER: SharedCleaningRosterState = {
   dayNumber: 1,
   lastCalendarDate: "2026-11-26",
-  assignedAccountIds: ["acc-jericho", "acc-franz", "acc-jeffry"],
+  timedInTodayAccountIds: [],
+  assignedAccountIds: [],
   completedTodayByAccount: {},
   totalCleaningsByAccount: {
     "acc-jericho": 0,
@@ -231,8 +232,8 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 22.09,
     initialShiftStartLabel: "8:25 AM",
     initialShiftTrack: "IT / software development",
-    initialTimedIn: true,
-    initialCleaningAssigned: true,
+    initialTimedIn: false,
+    initialCleaningAssigned: false,
   },
   {
     id: "acc-franz",
@@ -248,7 +249,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:15 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -265,7 +266,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:20 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -282,7 +283,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:22 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -299,7 +300,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:18 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -316,7 +317,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:24 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -333,7 +334,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:19 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -350,7 +351,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:21 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -367,7 +368,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:23 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -384,7 +385,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:17 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -401,7 +402,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:26 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -418,7 +419,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:20 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -435,7 +436,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:28 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -452,7 +453,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:20 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -469,7 +470,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:20 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -486,7 +487,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:20 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
   {
@@ -503,7 +504,7 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
     initialLoggedHours: 16.0,
     initialShiftStartLabel: "8:20 AM",
     initialShiftTrack: "Intern",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: false,
   },
 ];
@@ -528,6 +529,7 @@ export function createInitialStateForAccount(
     },
     cleaningRoster: {
       ...INITIAL_CLEANING_ROSTER,
+      timedInTodayAccountIds: [...INITIAL_CLEANING_ROSTER.timedInTodayAccountIds],
       assignedAccountIds: [...INITIAL_CLEANING_ROSTER.assignedAccountIds],
       completedTodayByAccount: {},
       totalCleaningsByAccount: {
@@ -539,9 +541,11 @@ export function createInitialStateForAccount(
         id: `${account.id}-day-2026-11-26`,
         taskTitle: account.initialShiftTrack,
         dateLabel: "Thu, Nov 26 · ngayon",
-        timeRangeLabel: `${account.initialShiftStartLabel} – bukas pa`,
+        timeRangeLabel: account.initialTimedIn
+          ? `${account.initialShiftStartLabel} – bukas pa`
+          : "Hindi pa naka-time in",
         hoursWorked: null,
-        isCurrentShift: true,
+        isCurrentShift: account.initialTimedIn,
         workArea: "Other",
         accomplishment: "",
       },
