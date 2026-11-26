@@ -34,9 +34,6 @@ function DashboardContent() {
     announce,
   } = useInternApp();
 
-  const [draftPhotoUrl, setDraftPhotoUrl] = useState<string | null>(null);
-  const [draftPhotoName, setDraftPhotoName] = useState("");
-  const [cleaningNote, setCleaningNote] = useState("");
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -92,28 +89,16 @@ function DashboardContent() {
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setDraftPhotoUrl(reader.result);
-        setDraftPhotoName(file.name || "cleaning-output.jpg");
+        submitCleaningProof(
+          reader.result,
+          file.name || "cleaning-output.jpg",
+          ""
+        );
       }
     };
     reader.readAsDataURL(file);
     // Reset input value so re-selecting the same file still fires onChange
     e.target.value = "";
-  };
-
-  const handleSubmitCleaningOutput = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!draftPhotoUrl) {
-      setPhotoError(
-        "Kumuha muna ng picture ng output ng paglilinis bago mag-submit."
-      );
-      return;
-    }
-    submitCleaningProof(draftPhotoUrl, draftPhotoName, cleaningNote);
-    setDraftPhotoUrl(null);
-    setDraftPhotoName("");
-    setCleaningNote("");
-    setPhotoError(null);
   };
 
   const pendingLabelsCount = useMemo(
@@ -329,10 +314,7 @@ function DashboardContent() {
                     ) : null}
                   </div>
                 ) : (
-                  <form
-                    onSubmit={handleSubmitCleaningOutput}
-                    className="space-y-3"
-                  >
+                  <div className="space-y-2.5">
                     <p className="text-xs font-bold tracking-wider text-[var(--text-muted)] uppercase">
                       Output ng paglilinis (Picture)
                     </p>
@@ -357,57 +339,7 @@ function DashboardContent() {
                         {photoError}
                       </p>
                     ) : null}
-
-                    {draftPhotoUrl ? (
-                      <div className="space-y-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-3">
-                        <div className="flex items-center justify-between gap-2 text-xs">
-                          <span className="truncate font-semibold text-[var(--text-primary)]">
-                            {draftPhotoName}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setDraftPhotoUrl(null);
-                              setDraftPhotoName("");
-                            }}
-                            className="shrink-0 font-semibold text-[var(--accent-danger)] hover:underline"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={draftPhotoUrl}
-                          alt="Cleaning output preview"
-                          className="max-h-56 w-full rounded-lg border border-[var(--border-subtle)] object-cover"
-                        />
-                      </div>
-                    ) : null}
-
-                    <div>
-                      <label
-                        htmlFor="cleaning-output-note"
-                        className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]"
-                      >
-                        Maikling tala (opsyonal)
-                      </label>
-                      <input
-                        id="cleaning-output-note"
-                        type="text"
-                        value={cleaningNote}
-                        onChange={(e) => setCleaningNote(e.target.value)}
-                        placeholder="Maikling tala..."
-                        className="ashai-control"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="ashai-tap-target w-full rounded-xl bg-[var(--accent-teal)] px-4 py-2.5 text-sm font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)]"
-                    >
-                      I-submit ang Output ng Paglilinis
-                    </button>
-                  </form>
+                  </div>
                 )}
               </div>
             ) : (
