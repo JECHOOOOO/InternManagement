@@ -159,6 +159,23 @@ body {
     min-block-size: 48px;
     min-inline-size: 48px;
   }
+
+  @media (min-width: 768px) {
+    .ashai-control {
+      min-block-size: 40px;
+      padding-block: 0.45rem;
+      font-size: 0.875rem;
+    }
+
+    textarea.ashai-control {
+      min-block-size: 4.5rem;
+    }
+
+    .ashai-tap-target {
+      min-block-size: 40px;
+      min-inline-size: 40px;
+    }
+  }
 }
 
 /* Native <dialog> modal scroll containment */

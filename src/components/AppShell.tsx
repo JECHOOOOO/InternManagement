@@ -400,16 +400,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         {/* Subtle Desktop Top Utility Strip */}
-        <header className="hidden border-b border-[var(--border-subtle)] bg-[var(--bg-header)]/80 px-6 py-3 md:flex md:items-center md:justify-between">
+        <header className="hidden border-b border-[var(--border-subtle)] bg-[var(--bg-header)]/80 px-6 py-2 md:flex md:items-center md:justify-between">
           <p className="text-xs font-medium text-[var(--text-muted)]">
             Intern workspace
           </p>
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3.5 text-sm text-[var(--text-secondary)] hover:border-[var(--border-control)] hover:text-[var(--text-primary)]"
+            className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 text-xs text-[var(--text-secondary)] hover:border-[var(--border-control)] hover:text-[var(--text-primary)]"
           >
-            <Search className="size-4" aria-hidden="true" />
+            <Search className="size-3.5" aria-hidden="true" />
             <span>Search tasks, leads, or guides</span>
           </button>
         </header>
@@ -426,7 +426,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto w-full max-w-2xl flex-1 px-4 pt-5 pb-[calc(var(--bottom-nav-height)+2.25rem+env(safe-area-inset-bottom))] md:max-w-4xl md:px-8 md:py-7"
+          className="mx-auto w-full max-w-2xl flex-1 px-4 pt-5 pb-[calc(var(--bottom-nav-height)+2.25rem+env(safe-area-inset-bottom))] md:max-w-4xl md:px-8 md:py-4"
         >
           {children}
         </main>

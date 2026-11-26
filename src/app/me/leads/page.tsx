@@ -107,15 +107,15 @@ export default function MyLeadsPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
+          <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] md:text-2xl">
             My leads
           </h1>
           <Link
             href="/oras"
-            className="mt-1 inline-block text-sm font-semibold text-[var(--accent-teal)] hover:underline"
+            className="mt-0.5 inline-block text-xs font-semibold text-[var(--accent-teal)] hover:underline md:text-sm"
           >
             Oras at daily reports
           </Link>
@@ -136,16 +136,16 @@ export default function MyLeadsPage() {
 
       <section
         aria-labelledby="client-leads-heading"
-        className="ashai-card space-y-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4"
+        className="ashai-card space-y-3.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4 md:p-5"
       >
         <div>
           <h2
             id="client-leads-heading"
-            className="text-lg font-extrabold text-[var(--text-primary)]"
+            className="text-base font-extrabold text-[var(--text-primary)] md:text-lg"
           >
             Client leads · {state.leads.length}
           </h2>
-          <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
+          <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-muted)]">
             Businesses at properties na kakausapin para sa ERP o booking
             platform. I-update ang notes at follow-up pagkatapos makipag-usap.
           </p>
@@ -156,13 +156,13 @@ export default function MyLeadsPage() {
             noValidate
             onSubmit={handleSubmit}
             aria-label="Add client lead"
-            className="space-y-4"
+            className="space-y-3"
           >
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <div>
                 <label
                   htmlFor="lead-business"
-                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                  className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
                 >
                   Business / property name
                 </label>
@@ -194,7 +194,7 @@ export default function MyLeadsPage() {
               <div>
                 <label
                   htmlFor="lead-contact"
-                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                  className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
                 >
                   Contact person
                 </label>
@@ -212,7 +212,7 @@ export default function MyLeadsPage() {
               <div>
                 <label
                   htmlFor="lead-channel"
-                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                  className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
                 >
                   Email / phone / profile link
                 </label>
@@ -229,7 +229,7 @@ export default function MyLeadsPage() {
               <div>
                 <label
                   htmlFor="lead-url"
-                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                  className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
                 >
                   Link ng lead
                 </label>
@@ -251,7 +251,7 @@ export default function MyLeadsPage() {
               <div>
                 <label
                   htmlFor="lead-followup"
-                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                  className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
                 >
                   Next follow-up
                 </label>
@@ -284,7 +284,7 @@ export default function MyLeadsPage() {
               <div>
                 <label
                   htmlFor="lead-product"
-                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                  className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
                 >
                   Product
                 </label>
@@ -306,7 +306,7 @@ export default function MyLeadsPage() {
               <div>
                 <label
                   htmlFor="lead-status"
-                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                  className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
                 >
                   Status
                 </label>
@@ -329,7 +329,7 @@ export default function MyLeadsPage() {
             <div>
               <label
                 htmlFor="lead-notes"
-                className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
               >
                 Conversation notes / next action
               </label>
@@ -344,7 +344,7 @@ export default function MyLeadsPage() {
 
             <button
               type="submit"
-              className="ashai-tap-target w-full rounded-xl bg-[var(--accent-teal)] px-5 py-2.5 text-sm font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)] sm:w-auto"
+              className="ashai-tap-target w-full rounded-xl bg-[var(--accent-teal)] px-5 py-2 text-sm font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)] sm:w-auto"
             >
               Add lead
             </button>
@@ -397,8 +397,8 @@ export default function MyLeadsPage() {
           ) : null}
 
           {filteredLeads.length === 0 ? (
-            <div className="space-y-3 pt-1">
-              <p className="text-sm text-[var(--text-muted)]">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+              <p className="text-xs text-[var(--text-muted)] md:text-sm">
                 {state.leads.length === 0
                   ? "Wala pang leads."
                   : "Walang tugmang lead sa search o filter na ito."}
@@ -407,10 +407,10 @@ export default function MyLeadsPage() {
                 <button
                   type="button"
                   onClick={loadSampleLeads}
-                  className="ashai-tap-target inline-flex items-center gap-2 rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-3.5 py-2 text-xs font-bold text-[var(--accent-teal)] hover:bg-[rgba(77,196,178,0.22)]"
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-2.5 py-1 text-xs font-bold text-[var(--accent-teal)] hover:bg-[rgba(77,196,178,0.22)]"
                 >
-                  <Sparkles className="size-4" aria-hidden="true" />
-                  <span>Load 2 sample demo leads</span>
+                  <Sparkles className="size-3.5" aria-hidden="true" />
+                  <span>Load sample leads</span>
                 </button>
               ) : null}
             </div>
