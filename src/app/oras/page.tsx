@@ -204,6 +204,7 @@ export default function OrasPage() {
   const [expandedIds, setExpandedIds] = useState<string[]>(() =>
     state.workdays[0] ? [state.workdays[0].id] : []
   );
+  const [timeInModalOpen, setTimeInModalOpen] = useState(false);
   const [timeOutModalOpen, setTimeOutModalOpen] = useState(false);
   const [nextShiftTrack, setNextShiftTrack] = useState(state.activeShiftTrack);
   const [timeInPhotoUrl, setTimeInPhotoUrl] = useState<string | null>(null);
@@ -367,15 +368,8 @@ export default function OrasPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (!timeInPhotoUrl) {
-                setTimeInPhotoError(
-                  "Kumuha muna ng picture bago mag-Time in."
-                );
-                return;
-              }
-              toggleTimeInOut(nextShiftTrack, timeInPhotoUrl);
-              setTimeInPhotoUrl(null);
               setTimeInPhotoError(null);
+              setTimeInModalOpen(true);
             }}
             className="mt-3 space-y-3"
           >
@@ -400,55 +394,6 @@ export default function OrasPage() {
                 <option value="Sticker maker">Sticker maker</option>
                 <option value="Stock Count">Stock Count</option>
               </select>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs font-bold tracking-wider text-[var(--text-muted)] uppercase">
-                Time-in picture (Required)
-              </p>
-              <label className="ashai-tap-target inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-4 py-2.5 text-xs font-extrabold tracking-wide text-[var(--accent-teal)] uppercase transition hover:bg-[rgba(77,196,178,0.22)]">
-                <Camera className="size-4" aria-hidden="true" />
-                <span>{timeInPhotoUrl ? "Retake picture" : "Take a picture"}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleTimeInPhotoChange}
-                  className="sr-only"
-                />
-              </label>
-
-              {timeInPhotoError ? (
-                <p
-                  role="alert"
-                  className="text-xs font-semibold text-[var(--accent-danger)]"
-                >
-                  {timeInPhotoError}
-                </p>
-              ) : null}
-
-              {timeInPhotoUrl ? (
-                <div className="space-y-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card-inner)] p-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-[var(--accent-teal)]">
-                      Picture ready
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setTimeInPhotoUrl(null)}
-                      className="font-semibold text-[var(--accent-danger)] hover:underline"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={timeInPhotoUrl}
-                    alt="Time-in photo preview"
-                    className="max-h-48 w-full rounded-lg border border-[var(--border-subtle)] object-cover"
-                  />
-                </div>
-              ) : null}
             </div>
 
             <button
@@ -515,6 +460,95 @@ export default function OrasPage() {
           <ChevronRight className="size-4" aria-hidden="true" />
         </Link>
       </section>
+
+      {/* Time In Take-a-Picture Modal (triggered after clicking Time in) */}
+      <AccessibleModal
+        open={timeInModalOpen}
+        onClose={() => {
+          setTimeInModalOpen(false);
+          setTimeInPhotoError(null);
+        }}
+        titleId="timein-photo-title"
+        title="Take a picture to Time in"
+        subtitle="Kumuha ng picture para makumpirma ang Time in at pumasok sa rolling attendance."
+      >
+        <div className="space-y-3.5">
+          <label className="ashai-tap-target inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[var(--accent-teal)] px-4 py-3 text-xs font-extrabold tracking-wide text-[var(--accent-teal-ink)] uppercase transition hover:bg-[var(--accent-teal-hover)]">
+            <Camera className="size-4" aria-hidden="true" />
+            <span>{timeInPhotoUrl ? "Retake picture" : "Take a picture"}</span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleTimeInPhotoChange}
+              className="sr-only"
+            />
+          </label>
+
+          {timeInPhotoError ? (
+            <p
+              role="alert"
+              className="text-xs font-semibold text-[var(--accent-danger)]"
+            >
+              {timeInPhotoError}
+            </p>
+          ) : null}
+
+          {timeInPhotoUrl ? (
+            <div className="space-y-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card-inner)] p-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-[var(--accent-teal)]">
+                  Picture ready
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setTimeInPhotoUrl(null)}
+                  className="font-semibold text-[var(--accent-danger)] hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={timeInPhotoUrl}
+                alt="Time-in photo preview"
+                className="max-h-56 w-full rounded-lg border border-[var(--border-subtle)] object-cover"
+              />
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap justify-end gap-2.5 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setTimeInModalOpen(false);
+                setTimeInPhotoError(null);
+              }}
+              className="ashai-tap-target rounded-xl border border-[var(--border-control)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!timeInPhotoUrl) {
+                  setTimeInPhotoError(
+                    "Kumuha muna ng picture bago mag-Confirm Time in."
+                  );
+                  return;
+                }
+                toggleTimeInOut(nextShiftTrack, timeInPhotoUrl);
+                setTimeInPhotoUrl(null);
+                setTimeInPhotoError(null);
+                setTimeInModalOpen(false);
+              }}
+              className="ashai-tap-target rounded-xl bg-[var(--accent-teal)] px-4 py-2 text-sm font-extrabold text-[var(--accent-teal-ink)] hover:bg-[var(--accent-teal-hover)]"
+            >
+              Confirm Time in
+            </button>
+          </div>
+        </div>
+      </AccessibleModal>
 
       {/* Time Out Confirmation Modal */}
       <AccessibleModal
