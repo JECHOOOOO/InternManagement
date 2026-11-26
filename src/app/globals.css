@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+
+  --bg-canvas: #090c0c;
+  --bg-header: #0b0f0f;
+  --bg-card: #111616;
+  --bg-card-hover: #161d1d;
+  --bg-card-inner: #151b1b;
+  --bg-input: #0c1010;
+  --bg-pill: #1b2222;
+
+  --border-subtle: #222a2a;
+  --border-control: #586969;
+  --border-teal: #2e8477;
+  --border-amber: #7a581c;
+
+  --text-primary: #f3f6f6;
+  --text-secondary: #c1cccc;
+  --text-muted: #93a3a3;
+
+  --accent-teal: #4dc4b2;
+  --accent-teal-hover: #62d3c2;
+  --accent-teal-ink: #041b18;
+  --accent-teal-soft: rgba(77, 196, 178, 0.14);
+
+  --accent-gold-bg: #745819;
+  --accent-gold-hover: #886820;
+  --accent-amber: #e6a93b;
+  --accent-amber-soft: rgba(230, 169, 59, 0.08);
+
+  --accent-success: #4ade80;
+  --accent-danger: #f87171;
+  --accent-danger-soft: rgba(248, 113, 113, 0.12);
+
+  --scrollbar-track: #0d1212;
+  --scrollbar-thumb: #455454;
+
+  --bottom-nav-height: 4.5rem;
+}
+
+html {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scroll-padding-bottom: calc(var(--bottom-nav-height) + 2.5rem + env(safe-area-inset-bottom));
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-block-size: 100dvh;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  overflow-x: clip;
+}
+
+.visually-hidden:where(:not(:focus-within, :active)) {
+  position: absolute !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+.skip-link:focus {
+  position: fixed;
+  inset-block-start: 0.75rem;
+  inset-inline-start: 0.75rem;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background-color: var(--accent-teal);
+  color: var(--accent-teal-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--accent-teal);
+  outline-offset: 2px;
+}
+
+/* Native inputs, selects, textareas sized for comfortable mobile touch & no iOS zoom */
+.ashai-control {
+  font: inherit;
+  font-size: max(1rem, 1em);
+  line-height: 1.4;
+  min-block-size: 48px;
+  inline-size: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-control);
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  padding-inline: 0.9rem;
+  padding-block: 0.65rem;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.ashai-control::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.ashai-control:hover {
+  border-color: #778a8a;
+}
+
+textarea.ashai-control {
+  min-block-size: 6.5rem;
+  resize: vertical;
+}
+
+select.ashai-control {
+  appearance: none;
+  padding-inline-end: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c1cccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+}
+
+.ashai-control:is(:user-invalid, .user-invalid-fallback) {
+  border-color: var(--accent-danger);
+  background-color: #170d0d;
+}
+
+.ashai-tap-target {
+  min-block-size: 48px;
+  min-inline-size: 48px;
+}
+
+/* Native <dialog> modal scroll containment */
+dialog.ashai-dialog:modal {
+  margin: auto;
+  max-inline-size: min(92dvw, 32rem);
+  inline-size: 100%;
+  max-block-size: 88dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.125rem;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  padding: 0;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+}
+
+dialog.ashai-dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: rgba(4, 7, 7, 0.78);
+  backdrop-filter: blur(4px);
+}
+
+/* Accessible <details> disclosure chevron */
+.ashai-details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.ashai-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ashai-details-chevron {
+  transition: rotate 180ms ease;
+}
+
+.ashai-details[open] .ashai-details-chevron {
+  rotate: 90deg;
+}
+
+/* Active nav bar indicator meets >= 3:1 non-color cue requirement */
+.nav-item[aria-current="page"] {
+  color: var(--accent-teal);
+}
+
+.nav-item[aria-current="page"] .nav-indicator {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ashai-details-chevron,
+  .nav-indicator,
+  .ashai-control {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .nav-item[aria-current="page"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .ashai-card,
+  .ashai-control,
+  dialog.ashai-dialog {
+    border: 1px solid CanvasText;
+  }
+}
