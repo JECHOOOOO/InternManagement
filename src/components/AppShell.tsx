@@ -102,11 +102,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-h-dvh flex-col items-center justify-center bg-[var(--bg-canvas)] px-4 py-10">
         <div className="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6 shadow-xl">
           <div className="mb-6">
-            <p className="text-3xl font-extrabold tracking-tight">
+            <p className="font-brand text-3xl font-extrabold tracking-tight">
               <span className="text-[var(--text-primary)]">ash</span>
               <span className="text-[var(--accent-teal)]">ai</span>
             </p>
-            <p className="mt-1 text-xs font-semibold tracking-[0.22em] text-[var(--text-muted)] uppercase">
+            <p className="mt-1 text-xs font-medium tracking-[0.22em] text-[var(--text-muted)] uppercase">
               Apparel Smart Hub
             </p>
           </div>
@@ -158,11 +158,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="hidden border-r border-[var(--border-subtle)] bg-[var(--bg-header)] md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:justify-between md:px-4 md:py-5">
         <div>
           <Link href="/dashboard" className="block rounded-xl px-2 py-1">
-            <span className="block text-[1.7rem] font-extrabold leading-none tracking-tight">
+            <span className="font-brand block text-[1.7rem] font-extrabold leading-none tracking-tight">
               <span className="text-[var(--text-primary)]">ash</span>
               <span className="text-[var(--accent-teal)]">ai</span>
             </span>
-            <span className="mt-1.5 block text-[0.65rem] font-semibold tracking-[0.22em] text-[var(--text-muted)] uppercase">
+            <span className="mt-1.5 block text-[0.65rem] font-medium tracking-[0.22em] text-[var(--text-muted)] uppercase">
               Apparel Smart Hub
             </span>
           </Link>
@@ -230,11 +230,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
               <Link href="/dashboard" className="block rounded-lg">
-                <span className="block text-[1.65rem] font-extrabold leading-none tracking-tight">
+                <span className="font-brand block text-[1.65rem] font-extrabold leading-none tracking-tight">
                   <span className="text-[var(--text-primary)]">ash</span>
                   <span className="text-[var(--accent-teal)]">ai</span>
                 </span>
-                <span className="mt-1 block text-[0.62rem] font-semibold tracking-[0.22em] text-[var(--text-muted)] uppercase">
+                <span className="mt-1 block text-[0.62rem] font-medium tracking-[0.22em] text-[var(--text-muted)] uppercase">
                   Apparel Smart Hub
                 </span>
               </Link>
