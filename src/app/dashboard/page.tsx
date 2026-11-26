@@ -225,7 +225,9 @@ function DashboardContent() {
             id="trabaho-mo-heading"
             className="text-xs font-bold tracking-[0.14em] text-[var(--text-muted)] uppercase"
           >
-            Ang trabaho mo · Paglilinis
+            {state.timedIn && isAssignedToMeToday
+              ? "Ang trabaho mo · Paglilinis"
+              : "Ang trabaho mo"}
           </h2>
           {state.timedIn && isAssignedToMeToday ? (
             <button
