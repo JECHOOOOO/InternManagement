@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import {
   AlertCircle,
   ExternalLink,
-  Plus,
   Search,
   Sparkles,
   Trash2,
@@ -37,7 +36,6 @@ export default function MyLeadsPage() {
     loadSampleLeads,
   } = useInternApp();
 
-  const [formOpen, setFormOpen] = useState(state.leads.length === 0);
   const [businessName, setBusinessName] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [contactChannel, setContactChannel] = useState("");
@@ -103,35 +101,20 @@ export default function MyLeadsPage() {
     setNotes("");
     setTouchedBusiness(false);
     setSubmitAttempted(false);
-    setFormOpen(false);
   };
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] md:text-2xl">
-            My leads
-          </h1>
-          <Link
-            href="/oras"
-            className="mt-0.5 inline-block text-xs font-semibold text-[var(--accent-teal)] hover:underline md:text-sm"
-          >
-            Oras at daily reports
-          </Link>
-        </div>
-
-        {state.leads.length > 0 ? (
-          <button
-            type="button"
-            aria-expanded={formOpen}
-            onClick={() => setFormOpen((prev) => !prev)}
-            className="ashai-tap-target inline-flex items-center gap-1.5 rounded-xl bg-[var(--accent-teal)] px-3.5 py-2 text-sm font-extrabold text-[var(--accent-teal-ink)] hover:bg-[var(--accent-teal-hover)]"
-          >
-            <Plus className="size-4" aria-hidden="true" />
-            <span>{formOpen ? "Hide form" : "New lead"}</span>
-          </button>
-        ) : null}
+      <div>
+        <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] md:text-2xl">
+          My leads
+        </h1>
+        <Link
+          href="/oras"
+          className="mt-0.5 inline-block text-xs font-semibold text-[var(--accent-teal)] hover:underline md:text-sm"
+        >
+          Oras at daily reports
+        </Link>
       </div>
 
       <section
@@ -151,13 +134,12 @@ export default function MyLeadsPage() {
           </p>
         </div>
 
-        {(formOpen || state.leads.length === 0) && (
-          <form
-            noValidate
-            onSubmit={handleSubmit}
-            aria-label="Add client lead"
-            className="space-y-3"
-          >
+        <form
+          noValidate
+          onSubmit={handleSubmit}
+          aria-label="Add client lead"
+          className="space-y-3"
+        >
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <div>
                 <label
@@ -348,8 +330,7 @@ export default function MyLeadsPage() {
             >
               Add lead
             </button>
-          </form>
-        )}
+        </form>
 
         {/* Search & Filter Leads */}
         <div className="space-y-3">
