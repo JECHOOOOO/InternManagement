@@ -6,8 +6,6 @@ import type { WorkdayLog } from "@/types/intern";
 
 interface OrasChartsProps {
   workdays: WorkdayLog[];
-  totalLoggedHours: number;
-  targetHours: number;
 }
 
 const WEEK_DAYS = [
@@ -18,11 +16,7 @@ const WEEK_DAYS = [
   { key: "Fri", label: "Day 5", shortDay: "Fri" },
 ] as const;
 
-export function OrasCharts({
-  workdays,
-  totalLoggedHours,
-  targetHours,
-}: OrasChartsProps) {
+export function OrasCharts({ workdays }: OrasChartsProps) {
   const [activeDayIdx, setActiveDayIdx] = useState<number | null>(null);
 
   const weeklyPoints = useMemo(() => {
@@ -70,24 +64,11 @@ export function OrasCharts({
 
   const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${(padTop + plotH).toFixed(1)} L ${coords[0].x.toFixed(1)} ${(padTop + plotH).toFixed(1)} Z`;
 
-  // Donut / ring pie chart values
-  const safeTarget = Math.max(1, targetHours);
-  const completedHours = Math.min(safeTarget, Math.max(0, totalLoggedHours));
-  const remainingHours = Math.max(0, safeTarget - completedHours);
-  const completedRatio = completedHours / safeTarget;
-  const completedPct = Math.round(completedRatio * 100);
-  const ringRadius = 42;
-  const ringStrokeWidth = 16;
-  const ringCircumference = 2 * Math.PI * ringRadius;
-  const completedDash = completedRatio * ringCircumference;
-
   const selectedPoint =
     activeDayIdx !== null ? coords[activeDayIdx] : null;
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.45fr_1fr]">
-      {/* Filled Line Graph (Hours vs 5 Days per Week) */}
-      <div className="ashai-card flex flex-col justify-between rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4">
+    <div className="ashai-card flex flex-col justify-between rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-xs font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase">
@@ -267,114 +248,5 @@ export function OrasCharts({
           </svg>
         </div>
       </div>
-
-      {/* Pie Graph (Completed vs Required Total Hours, e.g. 240h) */}
-      <div className="ashai-card flex flex-col justify-between rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4">
-        <div>
-          <h3 className="text-xs font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase">
-            Required Hours
-          </h3>
-          <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-            Total: <strong className="text-[var(--text-primary)]">{safeTarget} hrs</strong>
-          </p>
-        </div>
-
-        <div className="my-3 flex items-center justify-center gap-4 sm:flex-row md:flex-col lg:flex-row">
-          <div className="relative size-32 shrink-0">
-            <svg
-              viewBox="0 0 120 120"
-              role="img"
-              aria-label={`Donut chart: ${completedHours.toFixed(2)} of ${safeTarget} required hours completed (${completedPct}%)`}
-              className="size-full"
-            >
-              {/* Remaining ring track */}
-              <circle
-                cx="60"
-                cy="60"
-                r={ringRadius}
-                fill="none"
-                stroke="var(--bg-pill)"
-                strokeWidth={ringStrokeWidth}
-              />
-
-              {/* Completed arc (#4FBFB0) starting at 12 o'clock clockwise */}
-              {completedRatio > 0 ? (
-                <circle
-                  cx="60"
-                  cy="60"
-                  r={ringRadius}
-                  fill="none"
-                  stroke="#4FBFB0"
-                  strokeWidth={ringStrokeWidth}
-                  strokeDasharray={`${completedDash} ${ringCircumference}`}
-                  strokeLinecap="butt"
-                  transform="rotate(-90 60 60)"
-                />
-              ) : null}
-
-              {/* Crisp outer & inner ring borders matching the reference donut style */}
-              <circle
-                cx="60"
-                cy="60"
-                r={ringRadius + ringStrokeWidth / 2}
-                fill="none"
-                stroke="var(--bg-canvas)"
-                strokeWidth="3"
-              />
-              <circle
-                cx="60"
-                cy="60"
-                r={ringRadius - ringStrokeWidth / 2}
-                fill="none"
-                stroke="var(--bg-canvas)"
-                strokeWidth="3"
-              />
-            </svg>
-
-            {/* Center percentage label */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center">
-              <span className="text-lg font-extrabold leading-none text-[#4FBFB0]">
-                {completedPct}%
-              </span>
-            </div>
-          </div>
-
-          <div className="min-w-0 space-y-2 text-xs">
-            <div>
-              <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
-                <span
-                  aria-hidden="true"
-                  className="size-2.5 shrink-0 rounded-full bg-[#4FBFB0]"
-                />
-                <span>Completed</span>
-              </div>
-              <p className="mt-0.5 pl-4 text-sm font-bold text-[#4FBFB0]">
-                {formatHoursMinutes(completedHours)}{" "}
-                <span className="text-xs font-medium text-[var(--text-muted)]">
-                  ({completedPct}%)
-                </span>
-              </p>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
-                <span
-                  aria-hidden="true"
-                  className="size-2.5 shrink-0 rounded-full bg-[#1b2424] ring-1 ring-[#384747]"
-                />
-                <span>Remaining</span>
-              </div>
-              <p className="mt-0.5 pl-4 text-sm font-bold text-[var(--text-primary)]">
-                {formatHoursMinutes(remainingHours)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <p className="border-t border-[var(--border-subtle)] pt-2 text-[0.7rem] text-[var(--text-muted)]">
-          {formatHoursMinutes(completedHours)} / {safeTarget}h completed
-        </p>
-      </div>
-    </div>
   );
 }

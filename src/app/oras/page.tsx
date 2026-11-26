@@ -393,11 +393,7 @@ export default function OrasPage() {
           </button>
         </div>
 
-        <OrasCharts
-          workdays={state.workdays}
-          totalLoggedHours={state.totalLoggedHours}
-          targetHours={targetHours}
-        />
+        <OrasCharts workdays={state.workdays} />
 
         <div className="space-y-3">
           {state.workdays.map((day) => (
