@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         id: "cleaning-duty-today",
         group: "Paglilinis",
         title: "Paglilinis · 4:30 PM Output",
-        subtitle: "Ikaw ang nakatask ngayon sa paglilinis — attach o take a picture ng output.",
+        subtitle: "Ikaw ang nakatask ngayon sa paglilinis — kumuha ng picture ng output.",
         href: "/dashboard#paglilinis",
       },
     ];

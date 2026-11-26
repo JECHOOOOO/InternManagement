@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Clock,
   FilePenLine,
-  ImagePlus,
   MessageSquare,
   Sticker,
   Trash2,
@@ -45,7 +44,7 @@ function DashboardContent() {
     {
       id: "msg-1",
       sender: "Ops Desk (Demo)",
-      text: "Reminder: pagdating ng 4:30 PM, simulan ang paglilinis at mag-attach o kumuha ng picture ng output.",
+      text: "Reminder: pagdating ng 4:30 PM, simulan ang paglilinis at kumuha ng picture ng output.",
       time: "9:15 AM",
     },
   ]);
@@ -99,7 +98,7 @@ function DashboardContent() {
     e.preventDefault();
     if (!draftPhotoUrl) {
       setPhotoError(
-        "Mag-attach o kumuha muna ng picture ng output ng paglilinis bago mag-submit."
+        "Kumuha muna ng picture ng output ng paglilinis bago mag-submit."
       );
       return;
     }
@@ -262,8 +261,8 @@ function DashboardContent() {
                 </strong>
                 . Pagdating ng{" "}
                 <strong className="text-[var(--accent-teal)]">4:30 PM</strong>,
-                magpapadala ng abiso para simulan ang paglilinis at mag-attach o
-                kumuha ng picture ng output.
+                magpapadala ng abiso para simulan ang paglilinis at kumuha ng
+                picture ng output.
               </p>
             </div>
 
@@ -283,8 +282,8 @@ function DashboardContent() {
                       4:30 PM — Simulan mo na maglinis
                     </p>
                     <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-secondary)]">
-                      Pagkatapos maglinis, mag-attach o kumuha ng picture ng output
-                      ng paglilinis bilang patunay.
+                      Pagkatapos maglinis, kumuha ng picture ng output ng
+                      paglilinis bilang patunay.
                     </p>
                   </div>
                 </div>
@@ -328,30 +327,17 @@ function DashboardContent() {
                       Output ng paglilinis (Picture)
                     </p>
 
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                      <label className="ashai-tap-target inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[var(--accent-teal)] px-4 py-2.5 text-xs font-extrabold tracking-wide text-[var(--accent-teal-ink)] uppercase transition hover:bg-[var(--accent-teal-hover)]">
-                        <Camera className="size-4" aria-hidden="true" />
-                        <span>Take a picture</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          onChange={handleCleaningPhotoSelect}
-                          className="sr-only"
-                        />
-                      </label>
-
-                      <label className="ashai-tap-target inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-control)] bg-[var(--bg-card)] px-4 py-2.5 text-xs font-bold tracking-wide text-[var(--text-primary)] uppercase transition hover:bg-[var(--bg-card-hover)]">
-                        <ImagePlus className="size-4" aria-hidden="true" />
-                        <span>Attach picture</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleCleaningPhotoSelect}
-                          className="sr-only"
-                        />
-                      </label>
-                    </div>
+                    <label className="ashai-tap-target inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[var(--accent-teal)] px-4 py-2.5 text-xs font-extrabold tracking-wide text-[var(--accent-teal-ink)] uppercase transition hover:bg-[var(--accent-teal-hover)]">
+                      <Camera className="size-4" aria-hidden="true" />
+                      <span>Take a picture</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleCleaningPhotoSelect}
+                        className="sr-only"
+                      />
+                    </label>
 
                     {photoError ? (
                       <p

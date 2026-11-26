@@ -398,7 +398,7 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
         ) {
           try {
             new Notification("4:30 PM — Simulan mo na maglinis", {
-              body: "Mag-attach o kumuha ng picture ng output ng paglilinis sa Ashai.",
+              body: "Kumuha ng picture ng output ng paglilinis sa Ashai.",
             });
           } catch {
             // Ignore browser notification errors
