@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   Clock,
+  Eye,
+  EyeOff,
   FilePenLine,
   Home,
   MoreHorizontal,
@@ -15,10 +17,7 @@ import {
 } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
 import { useInternApp } from "@/context/InternAppContext";
-import {
-  APP_BUILD_TAG,
-  MORE_KNOWLEDGE_CATEGORIES,
-} from "@/data/demoData";
+import { MORE_KNOWLEDGE_CATEGORIES } from "@/data/demoData";
 import type { NavRoute } from "@/types/intern";
 
 const NAV_ITEMS: {
@@ -37,10 +36,16 @@ const NAV_ITEMS: {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { state, liveMessage, signInDemo, resetDemoData } = useInternApp();
+  const { state, liveMessage, signInWithCredentials, resetDemoData } =
+    useInternApp();
   const [searchOpen, setSearchOpen] = useState(false);
   const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   const activeHref = useMemo(() => {
     if (pathname === "/") return "/dashboard";
@@ -99,10 +104,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [searchQuery, state.leads]);
 
   if (!state.signedIn) {
+    const handleSignInSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      const res = signInWithCredentials(loginUsername, loginPassword);
+      if (!res.ok) {
+        setLoginError(res.error ?? "Mali ang username o password.");
+        return;
+      }
+      setLoginError(null);
+      setLoginPassword("");
+      setForgotOpen(false);
+      router.push("/dashboard");
+    };
+
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-[var(--bg-canvas)] px-4 py-10">
-        <div className="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6 shadow-xl">
-          <div className="mb-6">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-[#06090a] px-4 py-10">
+        <div className="w-full max-w-[26rem] rounded-2xl border border-[#161c1c] bg-[#020404] p-7 shadow-[0_24px_80px_rgba(0,0,0,0.88)] sm:p-8">
+          <div className="mb-5">
             <Image
               src="/ashai-logo.png"
               alt="Ashai Apparel Smart Hub"
@@ -113,38 +131,103 @@ export function AppShell({ children }: { children: ReactNode }) {
             />
           </div>
 
-          <div className="mb-5 rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] p-3.5 text-sm text-[var(--text-secondary)]">
-            <p className="font-semibold text-[var(--accent-teal)]">
-              Demo Session Signed Out
-            </p>
-            <p className="mt-1">
-              This prototype uses local browser demo state only. No production
-              credentials or live Ashai backend APIs are connected.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={signInDemo}
-            className="ashai-tap-target w-full rounded-xl bg-[var(--accent-teal)] px-4 py-3 text-base font-bold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)]"
-          >
-            Continue as Demo Intern ({state.profile.fullName})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              resetDemoData();
-              signInDemo();
-            }}
-            className="ashai-tap-target mt-3 w-full rounded-xl border border-[var(--border-control)] bg-transparent px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]"
-          >
-            Reset demo data &amp; sign in
-          </button>
-
-          <p className="mt-6 text-center text-xs text-[var(--text-muted)]">
-            {APP_BUILD_TAG} · Demo UI
+          <p className="mb-6 text-sm text-[var(--text-muted)]">
+            Mag-sign in gamit ang account na binigay ng admin.
           </p>
+
+          <form onSubmit={handleSignInSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="login-username"
+                className="mb-1.5 block text-sm font-medium text-[var(--text-primary)]"
+              >
+                Username
+              </label>
+              <input
+                id="login-username"
+                type="text"
+                required
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                value={loginUsername}
+                onChange={(e) => {
+                  setLoginUsername(e.target.value);
+                  if (loginError) setLoginError(null);
+                }}
+                className="w-full rounded-lg border border-[#1f2626] bg-[#040707] px-3.5 py-2.5 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] hover:border-[#2e3a3a] focus:border-[var(--accent-teal)]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="login-password"
+                className="mb-1.5 block text-sm font-medium text-[var(--text-primary)]"
+              >
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  value={loginPassword}
+                  onChange={(e) => {
+                    setLoginPassword(e.target.value);
+                    if (loginError) setLoginError(null);
+                  }}
+                  className="w-full rounded-lg border border-[#1f2626] bg-[#040707] py-2.5 pr-11 pl-3.5 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] hover:border-[#2e3a3a] focus:border-[var(--accent-teal)]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-4.5" aria-hidden="true" />
+                  ) : (
+                    <Eye className="size-4.5" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {loginError ? (
+              <p
+                role="alert"
+                className="rounded-lg border border-[var(--accent-danger)]/40 bg-[var(--accent-danger-soft)] px-3 py-2 text-xs font-medium text-[var(--accent-danger)]"
+              >
+                {loginError}
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              className="ashai-tap-target mt-1 w-full rounded-lg bg-[var(--accent-teal)] px-4 py-2.5 text-sm font-bold text-[#041412] transition hover:bg-[var(--accent-teal-hover)]"
+            >
+              Sign in
+            </button>
+          </form>
+
+          <div className="mt-6 border-t border-[#161c1c] pt-4 text-center">
+            <button
+              type="button"
+              onClick={() => setForgotOpen((prev) => !prev)}
+              className="text-sm font-medium text-[var(--accent-teal)] transition hover:text-[var(--accent-teal-hover)]"
+            >
+              Nakalimutan ang password?
+            </button>
+            {forgotOpen ? (
+              <p className="mt-2.5 rounded-lg border border-[#1b2424] bg-[#090d0d] px-3 py-2 text-xs leading-relaxed text-[var(--text-muted)]">
+                Makipag-ugnayan sa iyong admin para ma-reset ang password ng
+                account mo. (Demo UI — local accounts only.)
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
     );

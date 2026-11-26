@@ -109,8 +109,22 @@ export interface InternProfile {
   currentTrack: string;
 }
 
+export interface DemoAuthAccount {
+  id: string;
+  username: string;
+  password: string;
+  profile: InternProfile;
+  initialLoggedHours: number;
+  initialShiftStartLabel: string;
+  initialShiftTrack: string;
+  initialTimedIn: boolean;
+  initialCleaningAssigned: boolean;
+}
+
 export interface DemoAppState {
   signedIn: boolean;
+  accountId: string;
+  username: string;
   notificationsEnabled: boolean;
   notificationPromptDismissed: boolean;
   timedIn: boolean;

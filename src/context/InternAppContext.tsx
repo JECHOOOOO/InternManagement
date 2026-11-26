@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 import {
+  createInitialStateForAccount,
+  DEMO_ACCOUNTS,
   INITIAL_CLEANING_DUTY,
   INITIAL_DEMO_STATE,
   SAMPLE_DEMO_LEADS,
@@ -22,18 +24,32 @@ import type {
   WorkAreaOption,
 } from "@/types/intern";
 
-const STORAGE_KEY = "ashai-intern-demo-state-v3";
+const SESSION_KEY = "ashai-intern-session-v4";
+const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v4:";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
 let clientCachedState: DemoAppState | null = null;
 
-function mergeWithDefaults(parsed: Partial<DemoAppState>): DemoAppState {
+function findAccountById(accountId: string | null | undefined) {
+  return DEMO_ACCOUNTS.find((acc) => acc.id === accountId) ?? DEMO_ACCOUNTS[0];
+}
+
+function mergeAccountState(
+  accountId: string,
+  parsed: Partial<DemoAppState>,
+  signedIn: boolean
+): DemoAppState {
+  const account = findAccountById(accountId);
+  const base = createInitialStateForAccount(account, signedIn);
   return {
-    ...INITIAL_DEMO_STATE,
+    ...base,
     ...parsed,
+    signedIn,
+    accountId: account.id,
+    username: account.username,
     profile: {
-      ...INITIAL_DEMO_STATE.profile,
+      ...base.profile,
       ...(parsed.profile ?? {}),
     },
     cleaningDuty: {
@@ -43,16 +59,29 @@ function mergeWithDefaults(parsed: Partial<DemoAppState>): DemoAppState {
     workdays:
       Array.isArray(parsed.workdays) && parsed.workdays.length > 0
         ? parsed.workdays
-        : INITIAL_DEMO_STATE.workdays,
-    requests: Array.isArray(parsed.requests)
-      ? parsed.requests
-      : INITIAL_DEMO_STATE.requests,
-    leads: Array.isArray(parsed.leads) ? parsed.leads : INITIAL_DEMO_STATE.leads,
+        : base.workdays,
+    requests: Array.isArray(parsed.requests) ? parsed.requests : base.requests,
+    leads: Array.isArray(parsed.leads) ? parsed.leads : base.leads,
     labelJobs:
       Array.isArray(parsed.labelJobs) && parsed.labelJobs.length > 0
         ? parsed.labelJobs
-        : INITIAL_DEMO_STATE.labelJobs,
+        : base.labelJobs,
   };
+}
+
+function readAccountFromStorage(accountId: string, signedIn: boolean): DemoAppState {
+  const account = findAccountById(accountId);
+  if (typeof window === "undefined") {
+    return createInitialStateForAccount(account, signedIn);
+  }
+  try {
+    const raw = window.localStorage.getItem(`${ACCOUNT_KEY_PREFIX}${account.id}`);
+    return raw
+      ? mergeAccountState(account.id, JSON.parse(raw) as Partial<DemoAppState>, signedIn)
+      : createInitialStateForAccount(account, signedIn);
+  } catch {
+    return createInitialStateForAccount(account, signedIn);
+  }
 }
 
 function readSnapshot(): DemoAppState {
@@ -60,10 +89,17 @@ function readSnapshot(): DemoAppState {
   if (clientCachedState !== null) return clientCachedState;
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    clientCachedState = raw
-      ? mergeWithDefaults(JSON.parse(raw) as Partial<DemoAppState>)
-      : INITIAL_DEMO_STATE;
+    const activeAccountId = window.localStorage.getItem(SESSION_KEY);
+    if (!activeAccountId) {
+      clientCachedState = INITIAL_DEMO_STATE;
+      return clientCachedState;
+    }
+    const account = DEMO_ACCOUNTS.find((acc) => acc.id === activeAccountId);
+    if (!account) {
+      clientCachedState = INITIAL_DEMO_STATE;
+      return clientCachedState;
+    }
+    clientCachedState = readAccountFromStorage(account.id, true);
   } catch {
     clientCachedState = INITIAL_DEMO_STATE;
   }
@@ -77,7 +113,10 @@ function getServerSnapshot(): DemoAppState {
 function subscribe(listener: Listener): () => void {
   listeners.add(listener);
   const handleStorage = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY) {
+    if (
+      e.key === SESSION_KEY ||
+      (e.key && e.key.startsWith(ACCOUNT_KEY_PREFIX))
+    ) {
       clientCachedState = null;
       listener();
     }
@@ -93,12 +132,19 @@ function subscribe(listener: Listener): () => void {
   };
 }
 
-function updateStore(updater: (prev: DemoAppState) => DemoAppState) {
-  const next = updater(readSnapshot());
+function emitChange(next: DemoAppState) {
   clientCachedState = next;
   if (typeof window !== "undefined") {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      if (next.signedIn) {
+        window.localStorage.setItem(SESSION_KEY, next.accountId);
+        window.localStorage.setItem(
+          `${ACCOUNT_KEY_PREFIX}${next.accountId}`,
+          JSON.stringify(next)
+        );
+      } else {
+        window.localStorage.removeItem(SESSION_KEY);
+      }
     } catch {
       // Ignore storage quota errors
     }
@@ -106,6 +152,11 @@ function updateStore(updater: (prev: DemoAppState) => DemoAppState) {
   for (const listener of listeners) {
     listener();
   }
+}
+
+function updateStore(updater: (prev: DemoAppState) => DemoAppState) {
+  const next = updater(readSnapshot());
+  emitChange(next);
 }
 
 interface InternAppContextValue {
@@ -138,6 +189,10 @@ interface InternAppContextValue {
   ) => void;
   clearCleaningProof: () => void;
   updateAvatarDataUrl: (dataUrl: string | undefined) => void;
+  signInWithCredentials: (
+    username: string,
+    password: string
+  ) => { ok: boolean; error?: string };
   signOut: () => void;
   signInDemo: () => void;
   resetDemoData: () => void;
@@ -210,11 +265,11 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
           const updatedDays = prev.workdays.map((day, idx) =>
             idx === 0
               ? {
-                  ...day,
-                  isCurrentShift: false,
-                  timeRangeLabel: `${prev.activeShiftStartLabel} – ${nowLabel}`,
-                  hoursWorked: day.hoursWorked ?? 1.25,
-                }
+                ...day,
+                isCurrentShift: false,
+                timeRangeLabel: `${prev.activeShiftStartLabel} – ${nowLabel}`,
+                hoursWorked: day.hoursWorked ?? 1.25,
+              }
               : day
           );
           return {
@@ -229,12 +284,12 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
         const updatedDays = prev.workdays.map((day, idx) =>
           idx === 0
             ? {
-                ...day,
-                taskTitle: nextTrack,
-                isCurrentShift: true,
-                timeRangeLabel: `${nowLabel} – bukas pa`,
-                hoursWorked: null,
-              }
+              ...day,
+              taskTitle: nextTrack,
+              isCurrentShift: true,
+              timeRangeLabel: `${nowLabel} – bukas pa`,
+              hoursWorked: null,
+            }
             : day
         );
         return {
@@ -266,11 +321,11 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
         workdays: prev.workdays.map((day) =>
           day.id === dayId
             ? {
-                ...day,
-                workArea,
-                accomplishment: accomplishment.trim(),
-                savedAtLabel,
-              }
+              ...day,
+              workArea,
+              accomplishment: accomplishment.trim(),
+              savedAtLabel,
+            }
             : day
         ),
       }));
@@ -462,28 +517,60 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
     [announce]
   );
 
+  const signInWithCredentials = useCallback(
+    (username: string, password: string): { ok: boolean; error?: string } => {
+      const normalized = username.trim().toLowerCase();
+      const matched = DEMO_ACCOUNTS.find(
+        (acc) => acc.username.toLowerCase() === normalized && acc.password === password
+      );
+      if (!matched) {
+        return {
+          ok: false,
+          error: "Mali ang username o password. I-check ang account na binigay ng admin.",
+        };
+      }
+      const nextState = readAccountFromStorage(matched.id, true);
+      emitChange(nextState);
+      announce(`Signed in as ${matched.profile.fullName}.`);
+      return { ok: true };
+    },
+    [announce]
+  );
+
   const signOut = useCallback(() => {
-    updateStore((prev) => ({ ...prev, signedIn: false }));
-    announce("Signed out of demo session.");
-  }, [announce]);
-
-  const signInDemo = useCallback(() => {
-    updateStore((prev) => ({ ...prev, signedIn: true }));
-    announce("Signed in to demo intern account.");
-  }, [announce]);
-
-  const resetDemoData = useCallback(() => {
-    clientCachedState = INITIAL_DEMO_STATE;
-    if (typeof window !== "undefined") {
+    const current = readSnapshot();
+    if (typeof window !== "undefined" && current.signedIn) {
       try {
-        window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.setItem(
+          `${ACCOUNT_KEY_PREFIX}${current.accountId}`,
+          JSON.stringify(current)
+        );
       } catch {
         // Ignore storage errors
       }
     }
-    for (const listener of listeners) {
-      listener();
+    emitChange({ ...current, signedIn: false });
+    announce("Signed out.");
+  }, [announce]);
+
+  const signInDemo = useCallback(() => {
+    const nextState = readAccountFromStorage(DEMO_ACCOUNTS[0].id, true);
+    emitChange(nextState);
+    announce(`Signed in as ${DEMO_ACCOUNTS[0].profile.fullName}.`);
+  }, [announce]);
+
+  const resetDemoData = useCallback(() => {
+    const current = readSnapshot();
+    const account = findAccountById(current.accountId);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(`${ACCOUNT_KEY_PREFIX}${account.id}`);
+      } catch {
+        // Ignore storage errors
+      }
     }
+    const fresh = createInitialStateForAccount(account, current.signedIn);
+    emitChange(fresh);
     announce("Demo data reset to initial state.");
   }, [announce]);
 
@@ -508,6 +595,7 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
       submitCleaningProof,
       clearCleaningProof,
       updateAvatarDataUrl,
+      signInWithCredentials,
       signOut,
       signInDemo,
       resetDemoData,
@@ -532,6 +620,7 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
       submitCleaningProof,
       clearCleaningProof,
       updateAvatarDataUrl,
+      signInWithCredentials,
       signOut,
       signInDemo,
       resetDemoData,

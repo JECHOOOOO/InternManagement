@@ -2,6 +2,7 @@ import type {
   CleaningDutyState,
   ClientLead,
   DemoAppState,
+  DemoAuthAccount,
   LabelQueueItem,
   LeadProduct,
   LeadStatus,
@@ -173,62 +174,125 @@ export const SAMPLE_DEMO_LEADS: ClientLead[] = [
   },
 ];
 
-export const INITIAL_DEMO_STATE: DemoAppState = {
-  signedIn: true,
-  notificationsEnabled: false,
-  notificationPromptDismissed: false,
-  timedIn: true,
-  activeShiftStartLabel: "8:25 AM",
-  activeShiftTrack: "IT / software development",
-  totalLoggedHours: 22.09,
-  profile: {
-    fullName: "jericho del Socorro",
-    initials: "JD",
-    roleLabel: "Intern",
-    targetHours: 240,
-    currentTrack: "IT / software development",
+export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
+  {
+    id: "acc-jericho",
+    username: "jericho.intern",
+    password: "intern123",
+    profile: {
+      fullName: "jericho del Socorro",
+      initials: "JD",
+      roleLabel: "Intern",
+      targetHours: 240,
+      currentTrack: "IT / software development",
+    },
+    initialLoggedHours: 22.09,
+    initialShiftStartLabel: "8:25 AM",
+    initialShiftTrack: "IT / software development",
+    initialTimedIn: true,
+    initialCleaningAssigned: true,
   },
-  cleaningDuty: INITIAL_CLEANING_DUTY,
-  workdays: [
-    {
-      id: "day-2026-11-26",
-      taskTitle: "IT / software development",
-      dateLabel: "Thu, Nov 26 · ngayon",
-      timeRangeLabel: "8:25 AM – bukas pa",
-      hoursWorked: null,
-      isCurrentShift: true,
-      workArea: "Other",
-      accomplishment: "",
+  {
+    id: "acc-mica",
+    username: "mica.intern",
+    password: "intern123",
+    profile: {
+      fullName: "Micaela Santos",
+      initials: "MS",
+      roleLabel: "Intern",
+      targetHours: 240,
+      currentTrack: "IT QA / testing",
     },
-    {
-      id: "day-2026-11-25",
-      taskTitle: "IT QA",
-      dateLabel: "Wed, Nov 25",
-      timeRangeLabel: "8:29 AM – 5:16 PM",
-      hoursWorked: 7.51,
-      workArea: "Other",
-      accomplishment: "",
+    initialLoggedHours: 18.5,
+    initialShiftStartLabel: "8:18 AM",
+    initialShiftTrack: "IT QA / testing",
+    initialTimedIn: true,
+    initialCleaningAssigned: true,
+  },
+  {
+    id: "acc-paolo",
+    username: "paolo.intern",
+    password: "intern123",
+    profile: {
+      fullName: "Paolo Reyes",
+      initials: "PR",
+      roleLabel: "Intern",
+      targetHours: 240,
+      currentTrack: "Client outreach",
     },
-    {
-      id: "day-2026-11-24",
-      taskTitle: "IT QA / testing",
-      dateLabel: "Tue, Nov 24",
-      timeRangeLabel: "8:03 AM – 5:01 PM",
-      hoursWorked: 7.94,
-      workArea: "Other",
-      accomplishment: "",
+    initialLoggedHours: 15.75,
+    initialShiftStartLabel: "8:30 AM",
+    initialShiftTrack: "Client outreach",
+    initialTimedIn: true,
+    initialCleaningAssigned: true,
+  },
+];
+
+export function createInitialStateForAccount(
+  account: DemoAuthAccount,
+  signedIn = true
+): DemoAppState {
+  return {
+    signedIn,
+    accountId: account.id,
+    username: account.username,
+    notificationsEnabled: false,
+    notificationPromptDismissed: false,
+    timedIn: account.initialTimedIn,
+    activeShiftStartLabel: account.initialShiftStartLabel,
+    activeShiftTrack: account.initialShiftTrack,
+    totalLoggedHours: account.initialLoggedHours,
+    profile: { ...account.profile },
+    cleaningDuty: {
+      ...INITIAL_CLEANING_DUTY,
+      assignedToday: account.initialCleaningAssigned,
     },
-    {
-      id: "day-2026-11-23",
-      taskTitle: "Sticker maker",
-      dateLabel: "Mon, Nov 23",
-      timeRangeLabel: "9:21 AM – 5:03 PM",
-      hoursWorked: 6.64,
-      workArea: "Other",
-      accomplishment: "",
-    },
-  ],
-  requests: [],
-  leads: [],
-  labelJobs: INITIAL_LABEL_JOBS,
-};
+    workdays: [
+      {
+        id: `${account.id}-day-2026-11-26`,
+        taskTitle: account.initialShiftTrack,
+        dateLabel: "Thu, Nov 26 · ngayon",
+        timeRangeLabel: `${account.initialShiftStartLabel} – bukas pa`,
+        hoursWorked: null,
+        isCurrentShift: true,
+        workArea: "Other",
+        accomplishment: "",
+      },
+      {
+        id: `${account.id}-day-2026-11-25`,
+        taskTitle: "IT QA",
+        dateLabel: "Wed, Nov 25",
+        timeRangeLabel: "8:29 AM – 5:16 PM",
+        hoursWorked: 7.51,
+        workArea: "Other",
+        accomplishment: "",
+      },
+      {
+        id: `${account.id}-day-2026-11-24`,
+        taskTitle: "IT QA / testing",
+        dateLabel: "Tue, Nov 24",
+        timeRangeLabel: "8:03 AM – 5:01 PM",
+        hoursWorked: 7.94,
+        workArea: "Other",
+        accomplishment: "",
+      },
+      {
+        id: `${account.id}-day-2026-11-23`,
+        taskTitle: "Sticker maker",
+        dateLabel: "Mon, Nov 23",
+        timeRangeLabel: "9:21 AM – 5:03 PM",
+        hoursWorked: 6.64,
+        workArea: "Other",
+        accomplishment: "",
+      },
+    ],
+    requests: [],
+    leads: [],
+    labelJobs: INITIAL_LABEL_JOBS.map((job) => ({ ...job })),
+  };
+}
+
+export const INITIAL_DEMO_STATE: DemoAppState = createInitialStateForAccount(
+  DEMO_ACCOUNTS[0],
+  false
+);
