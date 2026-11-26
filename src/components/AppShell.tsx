@@ -5,6 +5,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import {
+  Box,
+  ChevronDown,
+  ClipboardList,
   Clock,
   Eye,
   EyeOff,
@@ -13,7 +16,6 @@ import {
   MoreHorizontal,
   Power,
   Search,
-  Sparkles,
   Users,
 } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
@@ -48,11 +50,58 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarQuery, setSidebarQuery] = useState("");
+  const [prepareOpen, setPrepareOpen] = useState(true);
+  const [stockBuyingOpen, setStockBuyingOpen] = useState(true);
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [forgotOpen, setForgotOpen] = useState(false);
+
+  const pendingLabelsCount = useMemo(
+    () =>
+      state.labelJobs
+        .filter((job) => !job.done)
+        .reduce((sum, job) => sum + job.quantity, 0),
+    [state.labelJobs]
+  );
+
+  const sidebarFilter = sidebarQuery.trim().toLowerCase();
+  const desktopPrimaryLinks = [
+    { href: "/dashboard" as NavRoute, label: "Home" },
+    { href: "/oras" as NavRoute, label: "Oras at reports" },
+    { href: "/me/leads" as NavRoute, label: "Leads" },
+    { href: "/request" as NavRoute, label: "Request" },
+    { href: "/more" as NavRoute, label: "Profile" },
+  ].filter(
+    (item) => !sidebarFilter || item.label.toLowerCase().includes(sidebarFilter)
+  );
+
+  const prepareLinks = [
+    {
+      href: "/more?q=Labels",
+      label: "Labels",
+      badge: pendingLabelsCount,
+    },
+  ].filter(
+    (item) =>
+      !sidebarFilter ||
+      item.label.toLowerCase().includes(sidebarFilter) ||
+      "prepare".includes(sidebarFilter)
+  );
+
+  const stockBuyingLinks = [
+    { href: "/more?q=Stock%20Count", label: "Stock Count" },
+    { href: "/more?q=Stock%20Count", label: "Stock Count Settings" },
+  ].filter(
+    (item) =>
+      !sidebarFilter ||
+      item.label.toLowerCase().includes(sidebarFilter) ||
+      "stock & buying".includes(sidebarFilter)
+  );
+
+  const allSidebarExpanded = prepareOpen && stockBuyingOpen;
 
   const activeHref = useMemo(() => {
     if (pathname === "/") return "/dashboard";
@@ -246,76 +295,198 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to main content
       </a>
 
-      {/* Desktop Left Sidebar + Mobile Top Header share one clean navigation landmark */}
-      <aside className="hidden border-r border-[var(--border-subtle)] bg-[var(--bg-header)] md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:justify-between md:px-4 md:py-5">
-        <div>
-          <Link
-            href="/dashboard"
-            aria-label="Ashai Apparel Smart Hub Home"
-            className="inline-flex items-center rounded-xl px-2 py-1"
-          >
-            <Image
-              src="/ashai-logo.png"
-              alt="Ashai Apparel Smart Hub"
-              width={172}
-              height={43}
-              priority
-              className="block h-10 w-auto select-none"
+      {/* Desktop Left Sidebar */}
+      <aside className="hidden border-r border-[var(--border-subtle)] bg-[var(--bg-header)] md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:justify-between md:px-4 md:py-4">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex items-center justify-between gap-2">
+            <Link
+              href="/dashboard"
+              aria-label="Ashai Apparel Smart Hub Home"
+              className="inline-flex items-center rounded-xl px-1 py-0.5"
+            >
+              <Image
+                src="/ashai-logo.png"
+                alt="Ashai Apparel Smart Hub"
+                width={172}
+                height={43}
+                priority
+                className="block h-9 w-auto select-none"
+              />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setDemoNoticeOpen(true)}
+              title="Demo mode info"
+              className="rounded-full border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-2 py-0.5 text-[0.65rem] font-bold tracking-wide text-[var(--accent-teal)] uppercase hover:bg-[rgba(77,196,178,0.22)]"
+            >
+              Demo
+            </button>
+          </div>
+
+          {/* Sidebar Search */}
+          <div className="relative mt-3.5">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[var(--text-muted)]"
+              aria-hidden="true"
             />
-          </Link>
+            <input
+              type="search"
+              value={sidebarQuery}
+              onChange={(e) => setSidebarQuery(e.target.value)}
+              placeholder="Search (e.g. mass cut)"
+              aria-label="Search sidebar menu"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              className="w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] py-2 pr-3 pl-9 text-xs text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--accent-teal)]"
+            />
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setDemoNoticeOpen(true)}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-teal)] hover:bg-[rgba(77,196,178,0.22)]"
+          <div className="mt-2 flex justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                const next = !allSidebarExpanded;
+                setPrepareOpen(next);
+                setStockBuyingOpen(next);
+              }}
+              className="text-[0.72rem] font-semibold text-[var(--text-muted)] transition hover:text-[var(--accent-teal)]"
+            >
+              {allSidebarExpanded ? "Collapse all" : "Expand all"}
+            </button>
+          </div>
+
+          <nav
+            aria-label="Primary"
+            className="mt-2 min-h-0 flex-1 space-y-4 overflow-y-auto pr-0.5"
           >
-            <Sparkles className="size-3.5" aria-hidden="true" />
-            Demo mode · Local state
-          </button>
-
-          <nav aria-label="Primary" className="mt-6">
-            <ul className="space-y-1.5">
-              {NAV_ITEMS.map((item) => {
-                const Icon = item.icon;
+            {/* Primary Links */}
+            <ul className="space-y-1">
+              {desktopPrimaryLinks.map((item) => {
                 const isActive = activeHref === item.href;
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       aria-current={isActive ? "page" : undefined}
-                      className={`nav-item relative flex min-h-12 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                      className={`nav-item flex min-h-10 items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
                         isActive
-                          ? "bg-[var(--accent-teal-soft)] text-[var(--accent-teal)]"
-                          : "text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
+                          ? "bg-[var(--accent-teal-soft)] font-bold text-[var(--accent-teal)]"
+                          : "font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
                       }`}
                     >
-                      {isActive ? (
-                        <span
-                          aria-hidden="true"
-                          className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-[var(--accent-teal)]"
-                        />
-                      ) : null}
-                      <Icon className="size-5 shrink-0" aria-hidden="true" />
-                      <span>{item.label}</span>
+                      <span
+                        aria-hidden="true"
+                        className={`size-1.5 shrink-0 rounded-full ${
+                          isActive
+                            ? "bg-[var(--accent-teal)]"
+                            : "bg-[var(--text-muted)]/60"
+                        }`}
+                      />
+                      <span className="truncate">{item.label}</span>
                     </Link>
                   </li>
                 );
               })}
             </ul>
+
+            {/* PREPARE Section */}
+            {prepareLinks.length > 0 ? (
+              <div>
+                <button
+                  type="button"
+                  aria-expanded={prepareOpen}
+                  onClick={() => setPrepareOpen((prev) => !prev)}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.7rem] font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase transition hover:text-[var(--text-primary)]"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <ClipboardList
+                      className="size-3.5 text-[var(--accent-teal)]"
+                      aria-hidden="true"
+                    />
+                    <span>Prepare</span>
+                  </span>
+                  <ChevronDown
+                    className={`size-3.5 transition-transform ${
+                      prepareOpen ? "rotate-0" : "-rotate-90"
+                    }`}
+                    aria-hidden="true"
+                  />
+                </button>
+                {prepareOpen ? (
+                  <ul className="mt-1 space-y-1">
+                    {prepareLinks.map((item) => (
+                      <li key={item.label}>
+                        <Link
+                          href={item.href}
+                          className="flex min-h-9 items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
+                        >
+                          <span className="inline-flex items-center gap-3 truncate">
+                            <span
+                              aria-hidden="true"
+                              className="size-1.5 shrink-0 rounded-full bg-[var(--accent-teal)]"
+                            />
+                            <span className="truncate">{item.label}</span>
+                          </span>
+                          <span className="rounded-full bg-[var(--bg-pill)] px-2 py-0.5 text-[0.68rem] font-semibold text-[var(--text-secondary)]">
+                            {item.badge}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+
+            {/* STOCK & BUYING Section */}
+            {stockBuyingLinks.length > 0 ? (
+              <div>
+                <button
+                  type="button"
+                  aria-expanded={stockBuyingOpen}
+                  onClick={() => setStockBuyingOpen((prev) => !prev)}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.7rem] font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase transition hover:text-[var(--text-primary)]"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Box
+                      className="size-3.5 text-[var(--accent-teal)]"
+                      aria-hidden="true"
+                    />
+                    <span>Stock &amp; Buying</span>
+                  </span>
+                  <ChevronDown
+                    className={`size-3.5 transition-transform ${
+                      stockBuyingOpen ? "rotate-0" : "-rotate-90"
+                    }`}
+                    aria-hidden="true"
+                  />
+                </button>
+                {stockBuyingOpen ? (
+                  <ul className="mt-1 space-y-1">
+                    {stockBuyingLinks.map((item) => (
+                      <li key={item.label}>
+                        <Link
+                          href={item.href}
+                          className="flex min-h-9 items-center gap-3 rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="size-1.5 shrink-0 rounded-full bg-[var(--text-muted)]/60"
+                          />
+                          <span className="truncate">{item.label}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
           </nav>
         </div>
 
-        <div className="space-y-3 border-t border-[var(--border-subtle)] pt-4">
-          <button
-            type="button"
-            onClick={() => setSearchOpen(true)}
-            className="ashai-tap-target flex w-full items-center gap-2.5 rounded-xl border border-[var(--border-control)] bg-[var(--bg-card)] px-3.5 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:border-[var(--accent-teal)] hover:text-[var(--text-primary)]"
-          >
-            <Search className="size-4 shrink-0" aria-hidden="true" />
-            <span>Quick search</span>
-          </button>
-
-          <div className="flex items-center justify-between gap-2.5 px-1 pt-1">
+        <div className="space-y-2 border-t border-[var(--border-subtle)] pt-3">
+          <div className="flex items-center justify-between gap-2.5 px-1 pt-0.5">
             <div className="flex min-w-0 items-center gap-2.5">
               {state.profile.avatarDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
