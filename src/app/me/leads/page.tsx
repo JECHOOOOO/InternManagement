@@ -156,131 +156,131 @@ export default function MyLeadsPage() {
             noValidate
             onSubmit={handleSubmit}
             aria-label="Add client lead"
-            className="space-y-4 border-b border-[var(--border-subtle)] pb-5"
+            className="space-y-4"
           >
-            <div>
-              <label
-                htmlFor="lead-business"
-                className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
-              >
-                Business / property name <span aria-hidden="true">*</span>
-              </label>
-              <input
-                id="lead-business"
-                name="businessName"
-                type="text"
-                required
-                value={businessName}
-                aria-invalid={businessError ? "true" : "false"}
-                aria-describedby={businessError ? "err-lead-business" : undefined}
-                onChange={(e) => setBusinessName(e.target.value)}
-                onBlur={() => setTouchedBusiness(true)}
-                className={`ashai-control ${
-                  businessError ? "user-invalid-fallback" : ""
-                }`}
-              />
-              {businessError ? (
-                <p
-                  id="err-lead-business"
-                  className="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--accent-danger)]"
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <label
+                  htmlFor="lead-business"
+                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
                 >
-                  <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
-                  <span>{businessError}</span>
-                </p>
-              ) : null}
-            </div>
-
-            <div>
-              <label
-                htmlFor="lead-contact"
-                className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
-              >
-                Contact person
-              </label>
-              <input
-                id="lead-contact"
-                name="contactPerson"
-                type="text"
-                autoComplete="name"
-                value={contactPerson}
-                onChange={(e) => setContactPerson(e.target.value)}
-                className="ashai-control"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="lead-channel"
-                className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
-              >
-                Email / phone / profile link
-              </label>
-              <input
-                id="lead-channel"
-                name="contactChannel"
-                type="text"
-                value={contactChannel}
-                onChange={(e) => setContactChannel(e.target.value)}
-                className="ashai-control"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="lead-url"
-                className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
-              >
-                Link ng lead
-              </label>
-              <input
-                id="lead-url"
-                name="leadUrl"
-                type="url"
-                inputMode="url"
-                autoCorrect="off"
-                autoCapitalize="none"
-                spellCheck={false}
-                placeholder="afiyastaycation.com"
-                value={leadUrl}
-                onChange={(e) => setLeadUrl(e.target.value)}
-                className="ashai-control"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="lead-followup"
-                className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
-              >
-                Next follow-up
-              </label>
-              <input
-                id="lead-followup"
-                name="nextFollowUp"
-                type="date"
-                value={nextFollowUp}
-                onChange={(e) => setNextFollowUp(e.target.value)}
-                className="ashai-control"
-              />
-              <div className="mt-2 flex flex-wrap gap-2">
-                {[
-                  { label: "Tomorrow", offset: 1 },
-                  { label: "In 3 days", offset: 3 },
-                  { label: "Next week", offset: 7 },
-                ].map((preset) => (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    onClick={() => setNextFollowUp(addDaysIso(preset.offset))}
-                    className="min-h-9 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card-inner)] px-2.5 text-xs font-semibold text-[var(--text-secondary)] hover:border-[var(--border-teal)] hover:text-[var(--accent-teal)]"
+                  Business / property name
+                </label>
+                <input
+                  id="lead-business"
+                  name="businessName"
+                  type="text"
+                  required
+                  value={businessName}
+                  aria-invalid={businessError ? "true" : "false"}
+                  aria-describedby={businessError ? "err-lead-business" : undefined}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  onBlur={() => setTouchedBusiness(true)}
+                  className={`ashai-control ${
+                    businessError ? "user-invalid-fallback" : ""
+                  }`}
+                />
+                {businessError ? (
+                  <p
+                    id="err-lead-business"
+                    className="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--accent-danger)]"
                   >
-                    {preset.label}
-                  </button>
-                ))}
+                    <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+                    <span>{businessError}</span>
+                  </p>
+                ) : null}
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="lead-contact"
+                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                >
+                  Contact person
+                </label>
+                <input
+                  id="lead-contact"
+                  name="contactPerson"
+                  type="text"
+                  autoComplete="name"
+                  value={contactPerson}
+                  onChange={(e) => setContactPerson(e.target.value)}
+                  className="ashai-control"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="lead-channel"
+                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                >
+                  Email / phone / profile link
+                </label>
+                <input
+                  id="lead-channel"
+                  name="contactChannel"
+                  type="text"
+                  value={contactChannel}
+                  onChange={(e) => setContactChannel(e.target.value)}
+                  className="ashai-control"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="lead-url"
+                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                >
+                  Link ng lead
+                </label>
+                <input
+                  id="lead-url"
+                  name="leadUrl"
+                  type="url"
+                  inputMode="url"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder="afiyastaycation.com"
+                  value={leadUrl}
+                  onChange={(e) => setLeadUrl(e.target.value)}
+                  className="ashai-control"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="lead-followup"
+                  className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]"
+                >
+                  Next follow-up
+                </label>
+                <input
+                  id="lead-followup"
+                  name="nextFollowUp"
+                  type="date"
+                  value={nextFollowUp}
+                  onChange={(e) => setNextFollowUp(e.target.value)}
+                  className="ashai-control"
+                />
+                <div className="mt-2 flex flex-wrap gap-2 md:hidden">
+                  {[
+                    { label: "Tomorrow", offset: 1 },
+                    { label: "In 3 days", offset: 3 },
+                    { label: "Next week", offset: 7 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => setNextFollowUp(addDaysIso(preset.offset))}
+                      className="min-h-9 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card-inner)] px-2.5 text-xs font-semibold text-[var(--text-secondary)] hover:border-[var(--border-teal)] hover:text-[var(--accent-teal)]"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label
                   htmlFor="lead-product"
@@ -344,7 +344,7 @@ export default function MyLeadsPage() {
 
             <button
               type="submit"
-              className="ashai-tap-target w-full rounded-xl bg-[var(--accent-teal)] px-5 py-3 text-sm font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)] sm:w-auto"
+              className="ashai-tap-target w-full rounded-xl bg-[var(--accent-teal)] px-5 py-2.5 text-sm font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)] sm:w-auto"
             >
               Add lead
             </button>
@@ -367,7 +367,7 @@ export default function MyLeadsPage() {
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search business, contact, product or status."
+                placeholder="Search business, contact, product or status..."
                 autoCorrect="off"
                 autoCapitalize="none"
                 spellCheck={false}
