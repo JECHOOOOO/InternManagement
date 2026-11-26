@@ -30,6 +30,7 @@ function DashboardContent() {
     triggerCleaningReminder430,
     submitCleaningProof,
     clearCleaningProof,
+    advanceCleaningDay,
     announce,
   } = useInternApp();
 
@@ -49,9 +50,17 @@ function DashboardContent() {
     },
   ]);
 
-  // Automatically trigger the 4:30 PM cleaning notification when the clock reaches 4:30 PM
+  const isAssignedToMeToday =
+    state.cleaningRoster.assignedAccountId === state.accountId;
+  const myTotalCleanings =
+    state.cleaningRoster.totalCleaningsByAccount[state.accountId] ?? 0;
+  const myDoneInCycle = state.cleaningRoster.completedInCurrentCycle.includes(
+    state.accountId
+  );
+
+  // Automatically trigger the 4:30 PM cleaning notification ONLY for the intern assigned today
   useEffect(() => {
-    if (!state.timedIn || !state.cleaningDuty.assignedToday) return;
+    if (!state.timedIn || !isAssignedToMeToday) return;
     const checkTime = () => {
       if (isAtOrPast430Pm() && !state.cleaningDuty.reminderTriggeredAt430) {
         triggerCleaningReminder430(true);
@@ -62,15 +71,16 @@ function DashboardContent() {
     return () => window.clearInterval(intervalId);
   }, [
     state.timedIn,
-    state.cleaningDuty.assignedToday,
+    isAssignedToMeToday,
     state.cleaningDuty.reminderTriggeredAt430,
     triggerCleaningReminder430,
   ]);
 
   const show430Notif =
     state.timedIn &&
+    isAssignedToMeToday &&
     (state.cleaningDuty.reminderTriggeredAt430 ||
-      Boolean(state.cleaningDuty.submittedAtLabel));
+      state.cleaningRoster.completedToday);
 
   const handleCleaningPhotoSelect = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -214,13 +224,20 @@ function DashboardContent() {
         className="ashai-card rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4"
       >
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
-          <h2
-            id="trabaho-mo-heading"
-            className="text-xs font-bold tracking-[0.14em] text-[var(--text-muted)] uppercase"
-          >
-            Ang trabaho mo · Paglilinis
-          </h2>
-          {state.timedIn ? (
+          <div>
+            <h2
+              id="trabaho-mo-heading"
+              className="text-xs font-bold tracking-[0.14em] text-[var(--text-muted)] uppercase"
+            >
+              Ang trabaho mo · Paglilinis
+            </h2>
+            <p className="mt-0.5 text-[0.72rem] text-[var(--text-muted)]">
+              {myDoneInCycle
+                ? `Status mo: Nakapaglinis na sa cycle na ito · Kabuuang linis: ${myTotalCleanings}`
+                : `Status mo: Hindi ka pa nakakapaglinis sa cycle na ito · Kabuuang linis: ${myTotalCleanings}`}
+            </p>
+          </div>
+          {state.timedIn && isAssignedToMeToday ? (
             <button
               type="button"
               onClick={() => triggerCleaningReminder430(!show430Notif)}
@@ -247,6 +264,17 @@ function DashboardContent() {
               Pumunta sa Oras para mag-Time In
             </Link>
           </div>
+        ) : !isAssignedToMeToday ? (
+          <div className="mt-3.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card-inner)] p-4">
+            <p className="text-sm font-bold text-[var(--text-primary)]">
+              Wala kang nakatask na paglilinis ngayong araw.
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">
+              {myDoneInCycle
+                ? "Nakapaglinis ka na sa cycle na ito. Awtomatikong mag-aabiso ulit ang system kapag turn mo na sa susunod na cycle."
+                : "Hindi ka pa nakakapaglinis sa cycle na ito. Awtomatikong mag-aabiso ang system kapag ikaw na ang nakatask."}
+            </p>
+          </div>
         ) : (
           <div className="mt-3.5 space-y-3.5">
             {/* Post Time-In Assignment Banner */}
@@ -266,7 +294,7 @@ function DashboardContent() {
               </p>
             </div>
 
-            {/* 4:30 PM Notification + Attach / Take Picture Output */}
+            {/* 4:30 PM Notification + Take Picture Output */}
             {show430Notif ? (
               <div className="space-y-3.5 rounded-xl border border-[var(--border-amber)] bg-[var(--bg-card-inner)] p-4">
                 <div
@@ -288,14 +316,14 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                {state.cleaningDuty.submittedAtLabel &&
-                state.cleaningDuty.photoDataUrl ? (
+                {state.cleaningRoster.completedToday &&
+                state.cleaningRoster.completedPhotoDataUrl ? (
                   <div className="space-y-3 rounded-xl border border-[var(--border-teal)] bg-[var(--bg-card)] p-3.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[var(--accent-teal)]">
                         <CheckCircle2 className="size-4" aria-hidden="true" />
                         Tapos na ang paglilinis · Submitted{" "}
-                        {state.cleaningDuty.submittedAtLabel}
+                        {state.cleaningRoster.completedAtLabel}
                       </span>
                       <button
                         type="button"
@@ -308,15 +336,25 @@ function DashboardContent() {
                     </div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={state.cleaningDuty.photoDataUrl}
+                      src={state.cleaningRoster.completedPhotoDataUrl}
                       alt="Submitted cleaning output photo"
                       className="max-h-64 w-full rounded-xl border border-[var(--border-subtle)] object-cover"
                     />
-                    {state.cleaningDuty.note ? (
+                    {state.cleaningRoster.completedNote ? (
                       <p className="text-xs text-[var(--text-secondary)]">
-                        Tala: {state.cleaningDuty.note}
+                        Tala: {state.cleaningRoster.completedNote}
                       </p>
                     ) : null}
+
+                    <div className="border-t border-[var(--border-subtle)] pt-3">
+                      <button
+                        type="button"
+                        onClick={() => advanceCleaningDay()}
+                        className="ashai-tap-target w-full rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] px-3.5 py-2 text-xs font-bold text-[var(--accent-teal)] transition hover:bg-[rgba(77,196,178,0.22)]"
+                      >
+                        Simulan ang Susunod na Araw (Demo Roll)
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <form

@@ -12,7 +12,9 @@ import {
 import {
   createInitialStateForAccount,
   DEMO_ACCOUNTS,
+  getTodayIsoDate,
   INITIAL_CLEANING_DUTY,
+  INITIAL_CLEANING_ROSTER,
   INITIAL_DEMO_STATE,
   SAMPLE_DEMO_LEADS,
 } from "@/data/demoData";
@@ -21,15 +23,126 @@ import type {
   DemoAppState,
   InternRequestItem,
   LeadStatus,
+  SharedCleaningRosterState,
   WorkAreaOption,
 } from "@/types/intern";
 
 const SESSION_KEY = "ashai-intern-session-v4";
 const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v4:";
+const ROSTER_KEY = "ashai-intern-cleaning-roster-v1";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
 let clientCachedState: DemoAppState | null = null;
+
+function pickNextUnassignedAccountId(
+  currentAssignedId: string,
+  completedInCycle: string[]
+): { nextAccountId: string; resetCycle: boolean } {
+  const remaining = DEMO_ACCOUNTS.filter(
+    (acc) => !completedInCycle.includes(acc.id)
+  );
+  if (remaining.length > 0) {
+    const currentIdx = DEMO_ACCOUNTS.findIndex((a) => a.id === currentAssignedId);
+    for (let step = 1; step <= DEMO_ACCOUNTS.length; step++) {
+      const candidate =
+        DEMO_ACCOUNTS[(currentIdx + step) % DEMO_ACCOUNTS.length];
+      if (!completedInCycle.includes(candidate.id)) {
+        return { nextAccountId: candidate.id, resetCycle: false };
+      }
+    }
+    return { nextAccountId: remaining[0].id, resetCycle: false };
+  }
+  // All interns completed this cycle -> start fresh cycle from first account
+  return { nextAccountId: DEMO_ACCOUNTS[0].id, resetCycle: true };
+}
+
+function normalizeRoster(
+  parsed?: Partial<SharedCleaningRosterState>
+): SharedCleaningRosterState {
+  const todayIso = getTodayIsoDate();
+  const base: SharedCleaningRosterState = {
+    ...INITIAL_CLEANING_ROSTER,
+    lastCalendarDate: todayIso,
+    completedInCurrentCycle: [...INITIAL_CLEANING_ROSTER.completedInCurrentCycle],
+    totalCleaningsByAccount: {
+      ...INITIAL_CLEANING_ROSTER.totalCleaningsByAccount,
+    },
+  };
+  if (!parsed) return base;
+
+  const validAssigned = DEMO_ACCOUNTS.some(
+    (a) => a.id === parsed.assignedAccountId
+  )
+    ? (parsed.assignedAccountId as string)
+    : base.assignedAccountId;
+
+  const merged: SharedCleaningRosterState = {
+    dayNumber: typeof parsed.dayNumber === "number" ? parsed.dayNumber : base.dayNumber,
+    lastCalendarDate:
+      typeof parsed.lastCalendarDate === "string"
+        ? parsed.lastCalendarDate
+        : todayIso,
+    cycleNumber:
+      typeof parsed.cycleNumber === "number" ? parsed.cycleNumber : base.cycleNumber,
+    assignedAccountId: validAssigned,
+    completedToday: Boolean(parsed.completedToday),
+    completedAtLabel: parsed.completedAtLabel,
+    completedPhotoDataUrl: parsed.completedPhotoDataUrl,
+    completedPhotoFileName: parsed.completedPhotoFileName,
+    completedNote: typeof parsed.completedNote === "string" ? parsed.completedNote : "",
+    completedInCurrentCycle: Array.isArray(parsed.completedInCurrentCycle)
+      ? parsed.completedInCurrentCycle
+      : [],
+    totalCleaningsByAccount: {
+      ...base.totalCleaningsByAccount,
+      ...(parsed.totalCleaningsByAccount ?? {}),
+    },
+  };
+
+  // Automatic real-day roll ONLY if yesterday's assigned intern actually completed cleaning
+  if (merged.lastCalendarDate !== todayIso) {
+    if (merged.completedToday) {
+      const { nextAccountId, resetCycle } = pickNextUnassignedAccountId(
+        merged.assignedAccountId,
+        merged.completedInCurrentCycle
+      );
+      return {
+        ...merged,
+        dayNumber: merged.dayNumber + 1,
+        lastCalendarDate: todayIso,
+        cycleNumber: resetCycle ? merged.cycleNumber + 1 : merged.cycleNumber,
+        assignedAccountId: nextAccountId,
+        completedToday: false,
+        completedAtLabel: undefined,
+        completedPhotoDataUrl: undefined,
+        completedPhotoFileName: undefined,
+        completedNote: "",
+        completedInCurrentCycle: resetCycle ? [] : merged.completedInCurrentCycle,
+      };
+    }
+    // If not completed, keep the same intern assigned until they finish!
+    return {
+      ...merged,
+      lastCalendarDate: todayIso,
+    };
+  }
+
+  return merged;
+}
+
+function readSharedRoster(): SharedCleaningRosterState {
+  if (typeof window === "undefined") return INITIAL_CLEANING_ROSTER;
+  try {
+    const raw = window.localStorage.getItem(ROSTER_KEY);
+    const roster = raw
+      ? normalizeRoster(JSON.parse(raw) as Partial<SharedCleaningRosterState>)
+      : normalizeRoster();
+    return roster;
+  } catch {
+    return normalizeRoster();
+  }
+}
 
 function findAccountById(accountId: string | null | undefined) {
   return DEMO_ACCOUNTS.find((acc) => acc.id === accountId) ?? DEMO_ACCOUNTS[0];
@@ -56,6 +169,7 @@ function mergeAccountState(
       ...INITIAL_CLEANING_DUTY,
       ...(parsed.cleaningDuty ?? {}),
     },
+    cleaningRoster: readSharedRoster(),
     workdays:
       Array.isArray(parsed.workdays) && parsed.workdays.length > 0
         ? parsed.workdays
@@ -78,9 +192,15 @@ function readAccountFromStorage(accountId: string, signedIn: boolean): DemoAppSt
     const raw = window.localStorage.getItem(`${ACCOUNT_KEY_PREFIX}${account.id}`);
     return raw
       ? mergeAccountState(account.id, JSON.parse(raw) as Partial<DemoAppState>, signedIn)
-      : createInitialStateForAccount(account, signedIn);
+      : {
+          ...createInitialStateForAccount(account, signedIn),
+          cleaningRoster: readSharedRoster(),
+        };
   } catch {
-    return createInitialStateForAccount(account, signedIn);
+    return {
+      ...createInitialStateForAccount(account, signedIn),
+      cleaningRoster: readSharedRoster(),
+    };
   }
 }
 
@@ -91,12 +211,18 @@ function readSnapshot(): DemoAppState {
   try {
     const activeAccountId = window.localStorage.getItem(SESSION_KEY);
     if (!activeAccountId) {
-      clientCachedState = INITIAL_DEMO_STATE;
+      clientCachedState = {
+        ...INITIAL_DEMO_STATE,
+        cleaningRoster: readSharedRoster(),
+      };
       return clientCachedState;
     }
     const account = DEMO_ACCOUNTS.find((acc) => acc.id === activeAccountId);
     if (!account) {
-      clientCachedState = INITIAL_DEMO_STATE;
+      clientCachedState = {
+        ...INITIAL_DEMO_STATE,
+        cleaningRoster: readSharedRoster(),
+      };
       return clientCachedState;
     }
     clientCachedState = readAccountFromStorage(account.id, true);
@@ -115,6 +241,7 @@ function subscribe(listener: Listener): () => void {
   const handleStorage = (e: StorageEvent) => {
     if (
       e.key === SESSION_KEY ||
+      e.key === ROSTER_KEY ||
       (e.key && e.key.startsWith(ACCOUNT_KEY_PREFIX))
     ) {
       clientCachedState = null;
@@ -136,6 +263,10 @@ function emitChange(next: DemoAppState) {
   clientCachedState = next;
   if (typeof window !== "undefined") {
     try {
+      window.localStorage.setItem(
+        ROSTER_KEY,
+        JSON.stringify(next.cleaningRoster)
+      );
       if (next.signedIn) {
         window.localStorage.setItem(SESSION_KEY, next.accountId);
         window.localStorage.setItem(
@@ -188,6 +319,7 @@ interface InternAppContextValue {
     note: string
   ) => void;
   clearCleaningProof: () => void;
+  advanceCleaningDay: () => { ok: boolean; reason?: string };
   updateAvatarDataUrl: (dataUrl: string | undefined) => void;
   signInWithCredentials: (
     username: string,
@@ -298,10 +430,6 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
           activeShiftStartLabel: nowLabel,
           activeShiftTrack: nextTrack,
           workdays: updatedDays,
-          cleaningDuty: {
-            ...prev.cleaningDuty,
-            assignedToday: true,
-          },
         };
       });
       announce(
@@ -470,35 +598,121 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
   const submitCleaningProof = useCallback(
     (photoDataUrl: string, photoFileName: string, note: string) => {
       const submittedAtLabel = formatCurrentTimeLabel();
-      updateStore((prev) => ({
-        ...prev,
-        cleaningDuty: {
-          ...prev.cleaningDuty,
-          assignedToday: true,
-          reminderTriggeredAt430: true,
-          photoDataUrl,
-          photoFileName,
-          note: note.trim(),
-          submittedAtLabel,
-        },
-      }));
+      updateStore((prev) => {
+        if (prev.cleaningRoster.assignedAccountId !== prev.accountId) {
+          return prev;
+        }
+        const alreadyCountedToday = prev.cleaningRoster.completedToday;
+        const nextCycleList = prev.cleaningRoster.completedInCurrentCycle.includes(
+          prev.accountId
+        )
+          ? prev.cleaningRoster.completedInCurrentCycle
+          : [...prev.cleaningRoster.completedInCurrentCycle, prev.accountId];
+        const prevCount =
+          prev.cleaningRoster.totalCleaningsByAccount[prev.accountId] ?? 0;
+
+        return {
+          ...prev,
+          cleaningDuty: {
+            ...prev.cleaningDuty,
+            reminderTriggeredAt430: true,
+          },
+          cleaningRoster: {
+            ...prev.cleaningRoster,
+            completedToday: true,
+            completedAtLabel: submittedAtLabel,
+            completedPhotoDataUrl: photoDataUrl,
+            completedPhotoFileName: photoFileName,
+            completedNote: note.trim(),
+            completedInCurrentCycle: nextCycleList,
+            totalCleaningsByAccount: {
+              ...prev.cleaningRoster.totalCleaningsByAccount,
+              [prev.accountId]: alreadyCountedToday ? prevCount : prevCount + 1,
+            },
+          },
+        };
+      });
       announce(`Output ng paglilinis na-submit (${submittedAtLabel}).`);
     },
     [announce]
   );
 
   const clearCleaningProof = useCallback(() => {
+    updateStore((prev) => {
+      if (prev.cleaningRoster.assignedAccountId !== prev.accountId) {
+        return prev;
+      }
+      const wasCompleted = prev.cleaningRoster.completedToday;
+      const prevCount =
+        prev.cleaningRoster.totalCleaningsByAccount[prev.accountId] ?? 0;
+      return {
+        ...prev,
+        cleaningRoster: {
+          ...prev.cleaningRoster,
+          completedToday: false,
+          completedAtLabel: undefined,
+          completedPhotoDataUrl: undefined,
+          completedPhotoFileName: undefined,
+          completedNote: "",
+          completedInCurrentCycle: wasCompleted
+            ? prev.cleaningRoster.completedInCurrentCycle.filter(
+                (id) => id !== prev.accountId
+              )
+            : prev.cleaningRoster.completedInCurrentCycle,
+          totalCleaningsByAccount: {
+            ...prev.cleaningRoster.totalCleaningsByAccount,
+            [prev.accountId]: wasCompleted
+              ? Math.max(0, prevCount - 1)
+              : prevCount,
+          },
+        },
+      };
+    });
+    announce("Na-clear ang picture ng paglilinis.");
+  }, [announce]);
+
+  const advanceCleaningDay = useCallback((): { ok: boolean; reason?: string } => {
+    const current = readSnapshot();
+    const roster = current.cleaningRoster;
+    if (!roster.completedToday) {
+      const reason =
+        "Hindi pa pwedeng umusad sa susunod na araw — hindi pa natatapos ang paglilinis ngayong araw.";
+      announce(reason);
+      return { ok: false, reason };
+    }
+
+    const { nextAccountId, resetCycle } = pickNextUnassignedAccountId(
+      roster.assignedAccountId,
+      roster.completedInCurrentCycle
+    );
+
     updateStore((prev) => ({
       ...prev,
       cleaningDuty: {
-        ...prev.cleaningDuty,
-        photoDataUrl: undefined,
-        photoFileName: undefined,
-        note: "",
-        submittedAtLabel: undefined,
+        reminderTriggeredAt430: false,
+      },
+      cleaningRoster: {
+        ...prev.cleaningRoster,
+        dayNumber: prev.cleaningRoster.dayNumber + 1,
+        cycleNumber: resetCycle
+          ? prev.cleaningRoster.cycleNumber + 1
+          : prev.cleaningRoster.cycleNumber,
+        assignedAccountId: nextAccountId,
+        completedToday: false,
+        completedAtLabel: undefined,
+        completedPhotoDataUrl: undefined,
+        completedPhotoFileName: undefined,
+        completedNote: "",
+        completedInCurrentCycle: resetCycle
+          ? []
+          : prev.cleaningRoster.completedInCurrentCycle,
       },
     }));
-    announce("Na-clear ang picture ng paglilinis.");
+
+    announce(
+      "Nag-roll na sa susunod na araw — awtomatikong na-assign ang susunod na intern sa loob ng system."
+    );
+    return { ok: true };
   }, [announce]);
 
   const updateAvatarDataUrl = useCallback(
@@ -565,6 +779,7 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       try {
         window.localStorage.removeItem(`${ACCOUNT_KEY_PREFIX}${account.id}`);
+        window.localStorage.removeItem(ROSTER_KEY);
       } catch {
         // Ignore storage errors
       }
@@ -594,6 +809,7 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
       triggerCleaningReminder430,
       submitCleaningProof,
       clearCleaningProof,
+      advanceCleaningDay,
       updateAvatarDataUrl,
       signInWithCredentials,
       signOut,
@@ -619,6 +835,7 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
       triggerCleaningReminder430,
       submitCleaningProof,
       clearCleaningProof,
+      advanceCleaningDay,
       updateAvatarDataUrl,
       signInWithCredentials,
       signOut,

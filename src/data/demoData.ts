@@ -7,6 +7,7 @@ import type {
   LeadProduct,
   LeadStatus,
   MoreKnowledgeCategory,
+  SharedCleaningRosterState,
   WorkAreaOption,
 } from "@/types/intern";
 
@@ -38,9 +39,30 @@ export const LEAD_STATUSES: LeadStatus[] = [
 ];
 
 export const INITIAL_CLEANING_DUTY: CleaningDutyState = {
-  assignedToday: true,
   reminderTriggeredAt430: false,
-  note: "",
+};
+
+export function getTodayIsoDate(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export const INITIAL_CLEANING_ROSTER: SharedCleaningRosterState = {
+  dayNumber: 1,
+  lastCalendarDate: "2026-11-26",
+  cycleNumber: 1,
+  assignedAccountId: "acc-jericho",
+  completedToday: false,
+  completedNote: "",
+  completedInCurrentCycle: [],
+  totalCleaningsByAccount: {
+    "acc-jericho": 0,
+    "acc-mica": 0,
+    "acc-paolo": 0,
+  },
 };
 
 export const INITIAL_LABEL_JOBS: LabelQueueItem[] = [
@@ -245,7 +267,13 @@ export function createInitialStateForAccount(
     profile: { ...account.profile },
     cleaningDuty: {
       ...INITIAL_CLEANING_DUTY,
-      assignedToday: account.initialCleaningAssigned,
+    },
+    cleaningRoster: {
+      ...INITIAL_CLEANING_ROSTER,
+      completedInCurrentCycle: [...INITIAL_CLEANING_ROSTER.completedInCurrentCycle],
+      totalCleaningsByAccount: {
+        ...INITIAL_CLEANING_ROSTER.totalCleaningsByAccount,
+      },
     },
     workdays: [
       {

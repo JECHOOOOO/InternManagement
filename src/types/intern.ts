@@ -70,12 +70,21 @@ export interface ClientLead {
 }
 
 export interface CleaningDutyState {
-  assignedToday: boolean;
   reminderTriggeredAt430: boolean;
-  photoDataUrl?: string;
-  photoFileName?: string;
-  note: string;
-  submittedAtLabel?: string;
+}
+
+export interface SharedCleaningRosterState {
+  dayNumber: number;
+  lastCalendarDate: string;
+  cycleNumber: number;
+  assignedAccountId: string;
+  completedToday: boolean;
+  completedAtLabel?: string;
+  completedPhotoDataUrl?: string;
+  completedPhotoFileName?: string;
+  completedNote: string;
+  completedInCurrentCycle: string[];
+  totalCleaningsByAccount: Record<string, number>;
 }
 
 export interface LabelQueueItem {
@@ -137,4 +146,5 @@ export interface DemoAppState {
   labelJobs: LabelQueueItem[];
   profile: InternProfile;
   cleaningDuty: CleaningDutyState;
+  cleaningRoster: SharedCleaningRosterState;
 }
