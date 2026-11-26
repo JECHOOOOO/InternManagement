@@ -89,6 +89,21 @@ body {
   outline-offset: 2px;
 }
 
+@layer base {
+  button:not(:disabled):not([aria-disabled="true"]),
+  [role="button"]:not([aria-disabled="true"]),
+  input:where([type="button"], [type="submit"], [type="reset"]):not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  button[aria-disabled="true"],
+  [role="button"][aria-disabled="true"],
+  input:where([type="button"], [type="submit"], [type="reset"]):disabled {
+    cursor: default;
+  }
+}
+
 /* Native inputs, selects, textareas sized for comfortable mobile touch & no iOS zoom */
 .ashai-control {
   font: inherit;
