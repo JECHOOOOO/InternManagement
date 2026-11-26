@@ -17,37 +17,6 @@ const WEEK_DAYS = [
   { key: "Fri", label: "Day 5", shortDay: "Fri" },
 ] as const;
 
-function polarToCartesian(
-  cx: number,
-  cy: number,
-  radius: number,
-  angleInDegrees: number
-) {
-  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
-  return {
-    x: cx + radius * Math.cos(angleInRadians),
-    y: cy + radius * Math.sin(angleInRadians),
-  };
-}
-
-function describePieSlice(
-  cx: number,
-  cy: number,
-  radius: number,
-  startAngle: number,
-  endAngle: number
-): string {
-  const start = polarToCartesian(cx, cy, radius, endAngle);
-  const end = polarToCartesian(cx, cy, radius, startAngle);
-  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-  return [
-    `M ${cx} ${cy}`,
-    `L ${start.x} ${start.y}`,
-    `A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`,
-    "Z",
-  ].join(" ");
-}
-
 export function OrasCharts({
   workdays,
   totalLoggedHours,
@@ -100,13 +69,16 @@ export function OrasCharts({
 
   const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${(padTop + plotH).toFixed(1)} L ${coords[0].x.toFixed(1)} ${(padTop + plotH).toFixed(1)} Z`;
 
-  // Pie chart values
+  // Donut / ring pie chart values
   const safeTarget = Math.max(1, targetHours);
   const completedHours = Math.min(safeTarget, Math.max(0, totalLoggedHours));
   const remainingHours = Math.max(0, safeTarget - completedHours);
   const completedRatio = completedHours / safeTarget;
   const completedPct = Math.round(completedRatio * 100);
-  const completedAngle = Math.min(359.99, completedRatio * 360);
+  const ringRadius = 42;
+  const ringStrokeWidth = 16;
+  const ringCircumference = 2 * Math.PI * ringRadius;
+  const completedDash = completedRatio * ringCircumference;
 
   const selectedPoint =
     activeDayIdx !== null ? coords[activeDayIdx] : null;
@@ -311,30 +283,62 @@ export function OrasCharts({
             <svg
               viewBox="0 0 120 120"
               role="img"
-              aria-label={`Pie chart: ${completedHours.toFixed(2)} of ${safeTarget} required hours completed (${completedPct}%)`}
+              aria-label={`Donut chart: ${completedHours.toFixed(2)} of ${safeTarget} required hours completed (${completedPct}%)`}
               className="size-full"
             >
-              {/* Full pie background (Remaining) */}
+              {/* Remaining ring track */}
               <circle
                 cx="60"
                 cy="60"
-                r="52"
-                fill="#1b2424"
-                stroke="#263232"
-                strokeWidth="1.5"
+                r={ringRadius}
+                fill="none"
+                stroke="#222c2c"
+                strokeWidth={ringStrokeWidth}
               />
-              {/* Completed slice (#4FBFB0) */}
-              {completedRatio >= 0.999 ? (
-                <circle cx="60" cy="60" r="52" fill="#4FBFB0" />
-              ) : completedRatio > 0 ? (
-                <path
-                  d={describePieSlice(60, 60, 52, 0, completedAngle)}
-                  fill="#4FBFB0"
-                  stroke="#0b0f0f"
-                  strokeWidth="1.5"
+
+              {/* Completed arc (#4FBFB0) starting at 12 o'clock clockwise */}
+              {completedRatio > 0 ? (
+                <circle
+                  cx="60"
+                  cy="60"
+                  r={ringRadius}
+                  fill="none"
+                  stroke="#4FBFB0"
+                  strokeWidth={ringStrokeWidth}
+                  strokeDasharray={`${completedDash} ${ringCircumference}`}
+                  strokeLinecap="butt"
+                  transform="rotate(-90 60 60)"
                 />
               ) : null}
+
+              {/* Crisp outer & inner ring borders matching the reference donut style */}
+              <circle
+                cx="60"
+                cy="60"
+                r={ringRadius + ringStrokeWidth / 2}
+                fill="none"
+                stroke="#090c0c"
+                strokeWidth="3"
+              />
+              <circle
+                cx="60"
+                cy="60"
+                r={ringRadius - ringStrokeWidth / 2}
+                fill="none"
+                stroke="#090c0c"
+                strokeWidth="3"
+              />
             </svg>
+
+            {/* Center percentage label */}
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span className="text-lg font-extrabold leading-none text-[#4FBFB0]">
+                {completedPct}%
+              </span>
+              <span className="mt-0.5 text-[0.65rem] font-semibold text-[var(--text-muted)]">
+                {safeTarget}h
+              </span>
+            </div>
           </div>
 
           <div className="min-w-0 space-y-2 text-xs">
