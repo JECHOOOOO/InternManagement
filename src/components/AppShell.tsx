@@ -54,6 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     resetDemoData,
   } = useInternApp();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarQuery, setSidebarQuery] = useState("");
@@ -61,6 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [prepareOpen, setPrepareOpen] = useState(true);
   const [stockBuyingOpen, setStockBuyingOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const desktopSearchRef = useRef<HTMLDivElement>(null);
   const userMenuDesktopRef = useRef<HTMLDivElement>(null);
   const userMenuMobileRef = useRef<HTMLDivElement>(null);
   const [loginUsername, setLoginUsername] = useState("");
@@ -72,17 +74,28 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isLight = theme === "light";
 
   useEffect(() => {
-    if (!userMenuOpen) return;
+    if (!userMenuOpen && !desktopSearchOpen) return;
     const handlePointerDown = (e: MouseEvent) => {
       const target = e.target as Node;
-      const inDesktop = userMenuDesktopRef.current?.contains(target);
-      const inMobile = userMenuMobileRef.current?.contains(target);
-      if (!inDesktop && !inMobile) {
-        setUserMenuOpen(false);
+      if (userMenuOpen) {
+        const inDesktop = userMenuDesktopRef.current?.contains(target);
+        const inMobile = userMenuMobileRef.current?.contains(target);
+        if (!inDesktop && !inMobile) {
+          setUserMenuOpen(false);
+        }
+      }
+      if (
+        desktopSearchOpen &&
+        !desktopSearchRef.current?.contains(target)
+      ) {
+        setDesktopSearchOpen(false);
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setUserMenuOpen(false);
+      if (e.key === "Escape") {
+        setUserMenuOpen(false);
+        setDesktopSearchOpen(false);
+      }
     };
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
@@ -90,7 +103,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [userMenuOpen]);
+  }, [userMenuOpen, desktopSearchOpen]);
 
   const pendingLabelsCount = useMemo(
     () =>
@@ -784,18 +797,94 @@ export function AppShell({ children }: { children: ReactNode }) {
               : "border-[#dde5e3] bg-[#f4f6f5] text-[#0b1412]"
           }`}
         >
-          <button
-            type="button"
-            onClick={() => setSearchOpen(true)}
-            className={`inline-flex min-h-9 w-80 items-center gap-2 rounded-xl px-3.5 text-xs font-medium transition ${
-              isLight
-                ? "bg-[#182221] text-[#8fa39f] hover:bg-[#1f2c2b] hover:text-white"
-                : "bg-[#e5eae8] text-[#5c6d6a] hover:bg-[#dbe2e0] hover:text-[#0b1412]"
-            }`}
-          >
-            <Search className="size-3.5 shrink-0" aria-hidden="true" />
-            <span className="truncate">Search orders, clients, pages...</span>
-          </button>
+          {/* Inline Search Input with Anchored Dropdown (no modal overlay) */}
+          <div ref={desktopSearchRef} className="relative w-80">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const first = searchResults[0];
+                if (first) {
+                  setDesktopSearchOpen(false);
+                  router.push(first.href);
+                }
+              }}
+            >
+              <Search
+                className={`pointer-events-none absolute top-1/2 left-3.5 size-3.5 -translate-y-1/2 ${
+                  isLight ? "text-[#8fa39f]" : "text-[#5c6d6a]"
+                }`}
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={searchQuery}
+                onFocus={() => setDesktopSearchOpen(true)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setDesktopSearchOpen(true);
+                }}
+                placeholder="Search orders, clients, pages..."
+                aria-label="Search orders, clients, pages"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                className={`min-h-9 w-full rounded-xl py-1.5 pr-3 pl-9 text-xs font-medium outline-none transition ${
+                  isLight
+                    ? "bg-[#182221] text-white placeholder:text-[#8fa39f] focus:ring-1 focus:ring-[#4dc4b2]"
+                    : "bg-[#e5eae8] text-[#0b1412] placeholder:text-[#5c6d6a] focus:ring-1 focus:ring-[#0e7c6b]"
+                }`}
+              />
+            </form>
+
+            {desktopSearchOpen && searchQuery.trim().length > 0 ? (
+              <div className="absolute top-full left-0 z-40 mt-2 w-full overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-2xl">
+                <p className="border-b border-[var(--border-subtle)] px-3.5 py-2 text-[0.7rem] text-[var(--text-muted)]">
+                  {searchResults.length} resulta para sa &ldquo;{searchQuery.trim()}&rdquo;
+                </p>
+                <div className="max-h-72 divide-y divide-[var(--border-subtle)] overflow-y-auto">
+                  {searchResults.length === 0 ? (
+                    <p className="px-3.5 py-3 text-xs text-[var(--text-muted)]">
+                      Walang nakitang resulta.
+                    </p>
+                  ) : (
+                    searchResults.slice(0, 8).map((res) => {
+                      const badge =
+                        res.group === "Screens"
+                          ? "PAGE"
+                          : res.group === "My leads"
+                            ? "LEAD"
+                            : res.group === "Paglilinis"
+                              ? "TASK"
+                              : "GUIDE";
+                      return (
+                        <Link
+                          key={res.id}
+                          href={res.href}
+                          onClick={() => {
+                            setDesktopSearchOpen(false);
+                            setSearchQuery("");
+                          }}
+                          className="flex items-center justify-between gap-2 px-3.5 py-2.5 text-xs transition hover:bg-[var(--bg-card-hover)]"
+                        >
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <span className="shrink-0 rounded bg-[var(--accent-teal-soft)] px-1.5 py-0.5 text-[0.62rem] font-extrabold tracking-wide text-[var(--accent-teal)]">
+                              {badge}
+                            </span>
+                            <span className="truncate font-semibold text-[var(--text-primary)]">
+                              {res.title}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-[0.7rem] text-[var(--text-muted)]">
+                            {res.group}
+                          </span>
+                        </Link>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
 
           <div className="flex items-center gap-2.5">
             <button
