@@ -30,7 +30,7 @@ import type {
 
 const SESSION_KEY = "ashai-intern-session-v5";
 const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v5:";
-const ROSTER_KEY = "ashai-intern-cleaning-roster-v3";
+const ROSTER_KEY = "ashai-intern-cleaning-roster-v4";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -171,6 +171,7 @@ function mergeAccountState(
     profile: {
       ...base.profile,
       ...(parsed.profile ?? {}),
+      targetHours: base.profile.targetHours,
     },
     cleaningDuty: {
       ...INITIAL_CLEANING_DUTY,
