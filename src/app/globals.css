@@ -3,7 +3,6 @@
 @theme inline {
   --font-sans: var(--font-roboto), "Roboto", system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-brand: var(--font-syne), "Syne", var(--font-roboto), sans-serif;
 }
 
 :root {

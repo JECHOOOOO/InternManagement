@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Roboto, Syne } from "next/font/google";
+import { Roboto } from "next/font/google";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { InternAppProvider } from "@/context/InternAppContext";
@@ -9,13 +9,6 @@ const roboto = Roboto({
   subsets: ["latin"],
   weight: ["400", "500", "700", "900"],
   variable: "--font-roboto",
-  display: "swap",
-});
-
-const syne = Syne({
-  subsets: ["latin"],
-  weight: ["700", "800"],
-  variable: "--font-syne",
   display: "swap",
 });
 
@@ -38,7 +31,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${roboto.variable} ${syne.variable}`}>
+    <html lang="en" className={roboto.variable}>
       <body className="font-sans antialiased">
         <InternAppProvider>
           <AppShell>{children}</AppShell>

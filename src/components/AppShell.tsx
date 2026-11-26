@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
@@ -102,13 +103,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-h-dvh flex-col items-center justify-center bg-[var(--bg-canvas)] px-4 py-10">
         <div className="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6 shadow-xl">
           <div className="mb-6">
-            <p className="font-brand text-3xl font-extrabold tracking-tight">
-              <span className="text-[var(--text-primary)]">ash</span>
-              <span className="text-[var(--accent-teal)]">ai</span>
-            </p>
-            <p className="mt-1 text-xs font-medium tracking-[0.22em] text-[var(--text-muted)] uppercase">
-              Apparel Smart Hub
-            </p>
+            <Image
+              src="/ashai-logo.png"
+              alt="Ashai Apparel Smart Hub"
+              width={172}
+              height={43}
+              priority
+              className="block h-11 w-auto select-none"
+            />
           </div>
 
           <div className="mb-5 rounded-xl border border-[var(--border-teal)] bg-[var(--accent-teal-soft)] p-3.5 text-sm text-[var(--text-secondary)]">
@@ -157,14 +159,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Desktop Left Sidebar + Mobile Top Header share one clean navigation landmark */}
       <aside className="hidden border-r border-[var(--border-subtle)] bg-[var(--bg-header)] md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:justify-between md:px-4 md:py-5">
         <div>
-          <Link href="/dashboard" className="block rounded-xl px-2 py-1">
-            <span className="font-brand block text-[1.7rem] font-extrabold leading-none tracking-tight">
-              <span className="text-[var(--text-primary)]">ash</span>
-              <span className="text-[var(--accent-teal)]">ai</span>
-            </span>
-            <span className="mt-1.5 block text-[0.65rem] font-medium tracking-[0.22em] text-[var(--text-muted)] uppercase">
-              Apparel Smart Hub
-            </span>
+          <Link
+            href="/dashboard"
+            aria-label="Ashai Apparel Smart Hub Home"
+            className="inline-flex items-center rounded-xl px-2 py-1"
+          >
+            <Image
+              src="/ashai-logo.png"
+              alt="Ashai Apparel Smart Hub"
+              width={172}
+              height={43}
+              priority
+              className="block h-10 w-auto select-none"
+            />
           </Link>
 
           <button
@@ -229,14 +236,19 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-20 border-b border-[var(--border-subtle)] bg-[var(--bg-header)]/95 backdrop-blur-md md:hidden">
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
-              <Link href="/dashboard" className="block rounded-lg">
-                <span className="font-brand block text-[1.65rem] font-extrabold leading-none tracking-tight">
-                  <span className="text-[var(--text-primary)]">ash</span>
-                  <span className="text-[var(--accent-teal)]">ai</span>
-                </span>
-                <span className="mt-1 block text-[0.62rem] font-medium tracking-[0.22em] text-[var(--text-muted)] uppercase">
-                  Apparel Smart Hub
-                </span>
+              <Link
+                href="/dashboard"
+                aria-label="Ashai Apparel Smart Hub Home"
+                className="inline-flex shrink-0 items-center rounded-lg py-0.5"
+              >
+                <Image
+                  src="/ashai-logo.png"
+                  alt="Ashai Apparel Smart Hub"
+                  width={172}
+                  height={43}
+                  priority
+                  className="block h-9 w-auto select-none"
+                />
               </Link>
               <button
                 type="button"
