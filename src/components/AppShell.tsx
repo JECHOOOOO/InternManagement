@@ -11,13 +11,14 @@ import {
   FilePenLine,
   Home,
   MoreHorizontal,
+  Power,
   Search,
   Sparkles,
   Users,
 } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
 import { useInternApp } from "@/context/InternAppContext";
-import { MORE_KNOWLEDGE_CATEGORIES } from "@/data/demoData";
+import { APP_BUILD_TAG, MORE_KNOWLEDGE_CATEGORIES } from "@/data/demoData";
 import type { NavRoute } from "@/types/intern";
 
 const NAV_ITEMS: {
@@ -36,7 +37,7 @@ const NAV_ITEMS: {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { state, liveMessage, signInWithCredentials, resetDemoData } =
+  const { state, liveMessage, signInWithCredentials, signOut, resetDemoData } =
     useInternApp();
   const [searchOpen, setSearchOpen] = useState(false);
   const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
@@ -298,7 +299,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
 
-        <div className="space-y-2 border-t border-[var(--border-subtle)] pt-4">
+        <div className="space-y-3 border-t border-[var(--border-subtle)] pt-4">
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
@@ -307,8 +308,47 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Search className="size-4 shrink-0" aria-hidden="true" />
             <span>Quick search</span>
           </button>
-          <p className="px-2 text-xs text-[var(--text-muted)]">
-            {state.profile.fullName} · {state.profile.roleLabel}
+
+          <div className="flex items-center justify-between gap-2.5 px-1 pt-1">
+            <div className="flex min-w-0 items-center gap-2.5">
+              {state.profile.avatarDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={state.profile.avatarDataUrl}
+                  alt={`${state.profile.fullName} avatar`}
+                  className="size-9 shrink-0 rounded-full border border-[var(--border-teal)] object-cover"
+                />
+              ) : (
+                <div
+                  aria-hidden="true"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-pill)] text-xs font-extrabold text-[var(--text-primary)]"
+                >
+                  {state.profile.initials}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold leading-tight text-[var(--text-primary)]">
+                  {state.profile.fullName}
+                </p>
+                <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                  {state.profile.roleLabel}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={signOut}
+              aria-label="Sign out"
+              title="Sign out"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] transition hover:bg-[var(--accent-danger-soft)] hover:text-[var(--accent-danger)]"
+            >
+              <Power className="size-4.5" aria-hidden="true" />
+            </button>
+          </div>
+
+          <p className="text-center text-[0.7rem] text-[var(--text-muted)]">
+            {APP_BUILD_TAG}
           </p>
         </div>
       </aside>
