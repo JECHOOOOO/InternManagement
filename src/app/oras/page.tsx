@@ -281,23 +281,25 @@ export default function OrasPage() {
         </p>
 
         {/* Lunch & Shift Window Rules Callout */}
-        <div className="mt-4 flex gap-3 rounded-xl border border-[var(--border-amber)] bg-[var(--accent-amber-soft)] p-3.5 text-sm leading-relaxed text-[var(--text-primary)]">
+        <div className="mt-4 flex items-center gap-3.5 rounded-xl border border-[#4a3210] bg-[#0e0a04] px-4 py-3.5 text-[0.84rem] leading-[1.55] text-[#cfa968]">
           <Utensils
-            className="mt-0.5 size-5 shrink-0 text-[var(--accent-amber)]"
+            className="size-4.5 shrink-0 text-[#d98a2b]"
             aria-hidden="true"
           />
           <div>
-            <p>
-              <strong className="font-bold">12:00–1:00 ay pahinga</strong> —
-              hindi ito binibilang sa oras mo, at hindi mo na kailangang
+            <p className="font-normal">
+              <strong className="font-semibold text-[#e8c584]">
+                12:00–1:00 ay pahinga
+              </strong>{" "}
+              — hindi ito binibilang sa oras mo, at hindi mo na kailangang
               mag-time out. Awtomatiko itong ibinabawas.{" "}
-              <strong className="font-bold">
+              <strong className="font-semibold text-[#e8c584]">
                 8:00 hanggang 5:00 lang ang binibilang
               </strong>{" "}
               — ang pumasok bago mag-8 ay nabibilang mula 8:00, at ang lampas ng
               5:00 ay hindi na.
             </p>
-            <p className="mt-1.5 text-xs text-[var(--text-muted)]">
+            <p className="mt-1.5 text-[0.72rem] text-[#9c8254]">
               Demo display copy from screenshots — official cut-off rules live
               in Ashai backend.
             </p>
