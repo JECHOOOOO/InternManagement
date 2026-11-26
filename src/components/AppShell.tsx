@@ -16,7 +16,6 @@ import { AccessibleModal } from "@/components/AccessibleModal";
 import { useInternApp } from "@/context/InternAppContext";
 import {
   APP_BUILD_TAG,
-  CLEANING_TASKS,
   MORE_KNOWLEDGE_CATEGORIES,
 } from "@/data/demoData";
 import type { NavRoute } from "@/types/intern";
@@ -60,13 +59,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       href: n.href,
     }));
 
-    const tasks = CLEANING_TASKS.map((t) => ({
-      id: `cleaning-${t.id}`,
-      group: "Paglilinis",
-      title: t.title,
-      subtitle: t.description,
-      href: `/dashboard?cleaning=${t.id}`,
-    }));
+    const tasks = [
+      {
+        id: "cleaning-duty-today",
+        group: "Paglilinis",
+        title: "Paglilinis · 4:30 PM Output",
+        subtitle: "Ikaw ang nakatask ngayon sa paglilinis — attach o take a picture ng output.",
+        href: "/dashboard#paglilinis",
+      },
+    ];
 
     const knowledge = MORE_KNOWLEDGE_CATEGORIES.flatMap((cat) =>
       cat.items.map((item) => ({
@@ -356,7 +357,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="e.g. Walis, Pantry, CR, Oras, Leave..."
+              placeholder="e.g. Paglilinis, Oras, Leave, Leads..."
               autoCorrect="off"
               autoCapitalize="none"
               spellCheck={false}

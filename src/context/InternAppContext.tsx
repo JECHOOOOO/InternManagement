@@ -10,64 +10,35 @@ import {
   type ReactNode,
 } from "react";
 import {
-  getAssignedCleaningTask,
-  getCompletionKey,
-  getInternIndex,
-  INITIAL_CLEANING_ROTATION,
+  INITIAL_CLEANING_DUTY,
   INITIAL_DEMO_STATE,
   SAMPLE_DEMO_LEADS,
-  SAMPLE_INTERN_ACCOUNTS,
-  WEEKDAY_FULL_LABELS,
 } from "@/data/demoData";
 import type {
   ClientLead,
   DemoAppState,
   InternRequestItem,
   LeadStatus,
-  WeekdayIndex,
   WorkAreaOption,
 } from "@/types/intern";
 
-const STORAGE_KEY = "ashai-intern-demo-state-v2";
+const STORAGE_KEY = "ashai-intern-demo-state-v3";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
 let clientCachedState: DemoAppState | null = null;
 
 function mergeWithDefaults(parsed: Partial<DemoAppState>): DemoAppState {
-  const activeInternId =
-    parsed.activeInternId &&
-    SAMPLE_INTERN_ACCOUNTS.some((acc) => acc.id === parsed.activeInternId)
-      ? parsed.activeInternId
-      : INITIAL_DEMO_STATE.activeInternId;
-
-  const parsedRotation = parsed.cleaningRotation;
   return {
     ...INITIAL_DEMO_STATE,
     ...parsed,
-    activeInternId,
     profile: {
       ...INITIAL_DEMO_STATE.profile,
       ...(parsed.profile ?? {}),
     },
-    cleaningRotation: {
-      weekOffset:
-        typeof parsedRotation?.weekOffset === "number"
-          ? parsedRotation.weekOffset
-          : INITIAL_CLEANING_ROTATION.weekOffset,
-      activeDayIndex:
-        typeof parsedRotation?.activeDayIndex === "number" &&
-        parsedRotation.activeDayIndex >= 0 &&
-        parsedRotation.activeDayIndex <= 4
-          ? (parsedRotation.activeDayIndex as WeekdayIndex)
-          : INITIAL_CLEANING_ROTATION.activeDayIndex,
-      attendanceByIntern: {
-        ...INITIAL_CLEANING_ROTATION.attendanceByIntern,
-        ...(parsedRotation?.attendanceByIntern ?? {}),
-      },
-      completions: parsedRotation?.completions
-        ? parsedRotation.completions
-        : INITIAL_CLEANING_ROTATION.completions,
+    cleaningDuty: {
+      ...INITIAL_CLEANING_DUTY,
+      ...(parsed.cleaningDuty ?? {}),
     },
     workdays:
       Array.isArray(parsed.workdays) && parsed.workdays.length > 0
@@ -159,11 +130,13 @@ interface InternAppContextValue {
   removeLead: (id: string) => void;
   loadSampleLeads: () => void;
   toggleLabelJob: (id: string) => void;
-  switchInternAccount: (internId: string) => void;
-  toggleInternAttendance: (internId: string) => void;
-  toggleCleaningTaskDone: (internId: string) => void;
-  completeAllPresentToday: () => void;
-  advanceRollingDay: () => { ok: boolean; reason?: string };
+  triggerCleaningReminder430: (active: boolean) => void;
+  submitCleaningProof: (
+    photoDataUrl: string,
+    photoFileName: string,
+    note: string
+  ) => void;
+  clearCleaningProof: () => void;
   updateAvatarDataUrl: (dataUrl: string | undefined) => void;
   signOut: () => void;
   signInDemo: () => void;
@@ -270,6 +243,10 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
           activeShiftStartLabel: nowLabel,
           activeShiftTrack: nextTrack,
           workdays: updatedDays,
+          cleaningDuty: {
+            ...prev.cleaningDuty,
+            assignedToday: true,
+          },
         };
       });
       announce(
@@ -404,194 +381,69 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
     [announce]
   );
 
-  const switchInternAccount = useCallback(
-    (internId: string) => {
-      const target = SAMPLE_INTERN_ACCOUNTS.find((acc) => acc.id === internId);
-      if (!target) return;
+  const triggerCleaningReminder430 = useCallback(
+    (active: boolean) => {
       updateStore((prev) => ({
         ...prev,
-        activeInternId: target.id,
-        activeShiftTrack: target.currentTrack,
-        profile: {
-          ...prev.profile,
-          fullName: target.fullName,
-          initials: target.initials,
-          roleLabel: target.roleLabel,
-          currentTrack: target.currentTrack,
+        cleaningDuty: {
+          ...prev.cleaningDuty,
+          reminderTriggeredAt430: active,
         },
       }));
-      announce(`Switched demo account to ${target.fullName}.`);
-    },
-    [announce]
-  );
-
-  const toggleInternAttendance = useCallback(
-    (internId: string) => {
-      const target = SAMPLE_INTERN_ACCOUNTS.find((acc) => acc.id === internId);
-      const nowLabel = formatCurrentTimeLabel();
-      let isNowPresent = true;
-      updateStore((prev) => {
-        const current = prev.cleaningRotation.attendanceByIntern[internId] ?? {
-          present: true,
-        };
-        isNowPresent = !current.present;
-        return {
-          ...prev,
-          cleaningRotation: {
-            ...prev.cleaningRotation,
-            attendanceByIntern: {
-              ...prev.cleaningRotation.attendanceByIntern,
-              [internId]: {
-                present: isNowPresent,
-                timeInLabel: isNowPresent ? nowLabel : undefined,
-              },
-            },
-          },
-        };
-      });
-      if (target) {
-        announce(
-          isNowPresent
-            ? `${target.fullName} marked Present (${nowLabel}).`
-            : `${target.fullName} marked Absent for today.`
-        );
+      if (active) {
+        if (
+          typeof window !== "undefined" &&
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
+          try {
+            new Notification("4:30 PM — Simulan mo na maglinis", {
+              body: "Mag-attach o kumuha ng picture ng output ng paglilinis sa Ashai.",
+            });
+          } catch {
+            // Ignore browser notification errors
+          }
+        }
+        announce("4:30 PM Notif: Simulan mo na maglinis!");
+      } else {
+        announce("4:30 PM reminder preview closed.");
       }
     },
     [announce]
   );
 
-  const toggleCleaningTaskDone = useCallback(
-    (internId: string) => {
-      const target = SAMPLE_INTERN_ACCOUNTS.find((acc) => acc.id === internId);
-      const internIdx = getInternIndex(internId);
-      const nowLabel = formatCurrentTimeLabel();
-      let blockedAbsent = false;
-      let markedDone = false;
-      let taskTitle = "";
-
-      updateStore((prev) => {
-        const { weekOffset, activeDayIndex, attendanceByIntern, completions } =
-          prev.cleaningRotation;
-        const attendance = attendanceByIntern[internId];
-        if (attendance && !attendance.present) {
-          blockedAbsent = true;
-          return prev;
-        }
-
-        const key = getCompletionKey(weekOffset, activeDayIndex, internId);
-        const task = getAssignedCleaningTask(internIdx, activeDayIndex, weekOffset);
-        taskTitle = task.title;
-        const nextCompletions = { ...completions };
-
-        if (nextCompletions[key]) {
-          delete nextCompletions[key];
-          markedDone = false;
-        } else {
-          nextCompletions[key] = {
-            completedAtLabel: nowLabel,
-            taskId: task.id,
-          };
-          markedDone = true;
-        }
-
-        return {
-          ...prev,
-          cleaningRotation: {
-            ...prev.cleaningRotation,
-            completions: nextCompletions,
-          },
-        };
-      });
-
-      if (blockedAbsent && target) {
-        announce(
-          `${target.fullName} is marked Absent today. Mark Present first to complete cleaning.`
-        );
-        return;
-      }
-      if (target && taskTitle) {
-        announce(
-          markedDone
-            ? `${target.fullName}: "${taskTitle}" marked done.`
-            : `${target.fullName}: "${taskTitle}" set back to pending.`
-        );
-      }
-    },
-    [announce]
-  );
-
-  const completeAllPresentToday = useCallback(() => {
-    const nowLabel = formatCurrentTimeLabel();
-    updateStore((prev) => {
-      const { weekOffset, activeDayIndex, attendanceByIntern, completions } =
-        prev.cleaningRotation;
-      const nextCompletions = { ...completions };
-
-      SAMPLE_INTERN_ACCOUNTS.forEach((intern, internIdx) => {
-        const isPresent = attendanceByIntern[intern.id]?.present ?? true;
-        if (!isPresent) return;
-        const key = getCompletionKey(weekOffset, activeDayIndex, intern.id);
-        if (!nextCompletions[key]) {
-          const task = getAssignedCleaningTask(internIdx, activeDayIndex, weekOffset);
-          nextCompletions[key] = {
-            completedAtLabel: nowLabel,
-            taskId: task.id,
-          };
-        }
-      });
-
-      return {
+  const submitCleaningProof = useCallback(
+    (photoDataUrl: string, photoFileName: string, note: string) => {
+      const submittedAtLabel = formatCurrentTimeLabel();
+      updateStore((prev) => ({
         ...prev,
-        cleaningRotation: {
-          ...prev.cleaningRotation,
-          completions: nextCompletions,
+        cleaningDuty: {
+          ...prev.cleaningDuty,
+          assignedToday: true,
+          reminderTriggeredAt430: true,
+          photoDataUrl,
+          photoFileName,
+          note: note.trim(),
+          submittedAtLabel,
         },
-      };
-    });
-    announce("All present interns marked done for today's cleaning.");
-  }, [announce]);
+      }));
+      announce(`Output ng paglilinis na-submit (${submittedAtLabel}).`);
+    },
+    [announce]
+  );
 
-  const advanceRollingDay = useCallback((): { ok: boolean; reason?: string } => {
-    const snapshot = readSnapshot();
-    const { weekOffset, activeDayIndex, attendanceByIntern, completions } =
-      snapshot.cleaningRotation;
-
-    const unfinishedPresent = SAMPLE_INTERN_ACCOUNTS.filter((intern) => {
-      const isPresent = attendanceByIntern[intern.id]?.present ?? true;
-      if (!isPresent) return false;
-      const key = getCompletionKey(weekOffset, activeDayIndex, intern.id);
-      return !completions[key];
-    });
-
-    if (unfinishedPresent.length > 0) {
-      const names = unfinishedPresent.map((i) => i.fullName.split(" ")[0]).join(", ");
-      const reason = `Hindi pa pwedeng mag-roll sa susunod na araw — kailangan munang tapusin nina: ${names}.`;
-      announce(reason);
-      return { ok: false, reason };
-    }
-
-    const isEndOfWeek = activeDayIndex === 4;
-    const nextWeekOffset = isEndOfWeek ? weekOffset + 1 : weekOffset;
-    const nextDayIndex: WeekdayIndex = isEndOfWeek
-      ? 0
-      : ((activeDayIndex + 1) as WeekdayIndex);
-
+  const clearCleaningProof = useCallback(() => {
     updateStore((prev) => ({
       ...prev,
-      cleaningRotation: {
-        ...prev.cleaningRotation,
-        weekOffset: nextWeekOffset,
-        activeDayIndex: nextDayIndex,
+      cleaningDuty: {
+        ...prev.cleaningDuty,
+        photoDataUrl: undefined,
+        photoFileName: undefined,
+        note: "",
+        submittedAtLabel: undefined,
       },
     }));
-
-    const dayName = WEEKDAY_FULL_LABELS[nextDayIndex];
-    announce(
-      isEndOfWeek
-        ? `Tapos na ang 5-task cycle! Nag-roll na sa Week ${nextWeekOffset + 1} (${dayName}).`
-        : `Nag-roll na ang cleaning schedule sa ${dayName} — walang inulit na task.`
-    );
-    return { ok: true };
+    announce("Na-clear ang picture ng paglilinis.");
   }, [announce]);
 
   const updateAvatarDataUrl = useCallback(
@@ -652,11 +504,9 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
       removeLead,
       loadSampleLeads,
       toggleLabelJob,
-      switchInternAccount,
-      toggleInternAttendance,
-      toggleCleaningTaskDone,
-      completeAllPresentToday,
-      advanceRollingDay,
+      triggerCleaningReminder430,
+      submitCleaningProof,
+      clearCleaningProof,
       updateAvatarDataUrl,
       signOut,
       signInDemo,
@@ -678,11 +528,9 @@ export function InternAppProvider({ children }: { children: ReactNode }) {
       removeLead,
       loadSampleLeads,
       toggleLabelJob,
-      switchInternAccount,
-      toggleInternAttendance,
-      toggleCleaningTaskDone,
-      completeAllPresentToday,
-      advanceRollingDay,
+      triggerCleaningReminder430,
+      submitCleaningProof,
+      clearCleaningProof,
       updateAvatarDataUrl,
       signOut,
       signInDemo,
