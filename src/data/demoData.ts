@@ -124,8 +124,8 @@ export const INITIAL_LABEL_JOBS: LabelQueueItem[] = [
   {
     id: "lbl-3",
     designName: "Drifit Event Singlet — Teal",
-    sizeSummary: "S: 14 · M: 18 · L: 12",
-    quantity: 44,
+    sizeSummary: "S: 14 · M: 18 · L: 15",
+    quantity: 47,
     locationCode: "PREP-T3",
     done: false,
   },

@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   ArrowLeftToLine,
   ArrowRightFromLine,
   Box,
   ClipboardList,
+  Search,
   type LucideIcon,
 } from "lucide-react";
 import { APP_BUILD_TAG } from "@/data/demoData";
@@ -48,8 +50,11 @@ export function DesktopSidebar({
   pendingLabelsCount,
   collapsedNavItems,
 }: DesktopSidebarProps) {
+  const router = useRouter();
+  const [sidebarSearch, setSidebarSearch] = useState("");
   const [prepareOpen, setPrepareOpen] = useState(false);
-  const [stockBuyingOpen, setStockBuyingOpen] = useState(false);
+  const [stockBuyingOpen, setStockBuyingOpen] = useState(true);
+  const anyExpanded = prepareOpen || stockBuyingOpen;
 
   return (
     <aside
@@ -151,20 +156,63 @@ export function DesktopSidebar({
               </button>
             </div>
 
-            {/* Nav Items + Collapsed Ops Tools */}
+            {/* Sidebar Search Input */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = sidebarSearch.trim();
+                router.push(q ? `/more?q=${encodeURIComponent(q)}` : "/more");
+              }}
+              className="relative mt-4"
+            >
+              <Search
+                className={`pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 ${
+                  isLight ? "text-[#7d9893]" : "text-[#637a75]"
+                }`}
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={sidebarSearch}
+                onChange={(e) => setSidebarSearch(e.target.value)}
+                placeholder="Search (e.g. mass cut)"
+                aria-label="Search sidebar (e.g. mass cut)"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                className={`min-h-10 w-full rounded-xl border py-2 pr-3 pl-10 text-sm font-medium outline-none transition ${
+                  isLight
+                    ? "border-[#1f3733] bg-[#132623] text-white placeholder:text-[#7d9893] focus:border-[#4dc4b2]"
+                    : "border-[#bdd2cc] bg-[#cee0db] text-[#07100e] placeholder:text-[#637a75] focus:border-[#0e7c6b]"
+                }`}
+              />
+            </form>
+
+            {/* Collapse all / Expand all */}
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !anyExpanded;
+                  setPrepareOpen(next);
+                  setStockBuyingOpen(next);
+                }}
+                className={`text-xs font-semibold transition ${
+                  isLight
+                    ? "text-[#7d9893] hover:text-[#4dc4b2]"
+                    : "text-[#5d746f] hover:text-[#0e7c6b]"
+                }`}
+              >
+                {anyExpanded ? "Collapse all" : "Expand all"}
+              </button>
+            </div>
+
+            {/* Nav Items + Prepare + Stock & Buying */}
             <nav
               aria-label="Primary"
-              className="mt-5 min-h-0 flex-1 space-y-5 overflow-y-auto pr-0.5"
+              className="mt-2 min-h-0 flex-1 space-y-5 overflow-y-auto pr-0.5"
             >
-              <div>
-                <p
-                  className={`mb-1.5 px-2 text-[0.68rem] font-bold tracking-[0.14em] uppercase ${
-                    isLight ? "text-[#7a948f]" : "text-[#5a726c]"
-                  }`}
-                >
-                  Intern
-                </p>
-                <ul className="space-y-1">
+              <ul className="space-y-1">
                 {DESKTOP_PRIMARY_LINKS.map((item) => {
                   const isActive = activeHref === item.href;
                   return (
@@ -176,7 +224,7 @@ export function DesktopSidebar({
                           isActive
                             ? isLight
                               ? "bg-[#17322d] font-bold text-[#f4faf9]"
-                              : "bg-[#bdd3cd] font-bold text-[#07100e]"
+                              : "bg-[#c1d6d0] font-bold text-[#07100e]"
                             : isLight
                               ? "font-semibold text-[#9eb5b0] hover:bg-[#142a26] hover:text-white"
                               : "font-semibold text-[#2b3b37] hover:bg-[#cae0da] hover:text-[#07100e]"
@@ -199,24 +247,9 @@ export function DesktopSidebar({
                     </li>
                   );
                 })}
-                </ul>
-              </div>
+              </ul>
 
-              {/* Ops shortcuts (collapsed by default to keep intern nav clean) */}
-              <div
-                className={`space-y-2 border-t pt-4 ${
-                  isLight ? "border-[#192b28]" : "border-[#c2d6d0]"
-                }`}
-              >
-                <p
-                  className={`px-2 text-[0.68rem] font-bold tracking-[0.14em] uppercase ${
-                    isLight ? "text-[#637e79]" : "text-[#657c77]"
-                  }`}
-                >
-                  Floor Tools
-                </p>
-
-                {/* PREPARE Section */}
+              {/* PREPARE Section */}
               <div>
                 <button
                   type="button"
@@ -237,13 +270,24 @@ export function DesktopSidebar({
                     />
                     <span>Prepare</span>
                   </span>
-                  <span
-                    aria-hidden="true"
-                    className={`text-[0.65rem] ${
-                      isLight ? "text-[#7a948f]" : "text-[#5a726c]"
-                    }`}
-                  >
-                    {prepareOpen ? "▾" : "▸"}
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[0.7rem] font-bold tracking-normal ${
+                        isLight
+                          ? "bg-[#1a3430] text-[#b4cbc6]"
+                          : "bg-[#c3d7d2] text-[#2b3b37]"
+                      }`}
+                    >
+                      {pendingLabelsCount}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`text-[0.65rem] ${
+                        isLight ? "text-[#7a948f]" : "text-[#5a726c]"
+                      }`}
+                    >
+                      {prepareOpen ? "▾" : "▸"}
+                    </span>
                   </span>
                 </button>
                 {prepareOpen ? (
@@ -335,7 +379,6 @@ export function DesktopSidebar({
                     ))}
                   </ul>
                 ) : null}
-              </div>
               </div>
             </nav>
           </div>
