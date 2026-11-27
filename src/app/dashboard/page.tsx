@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
 import { useInternApp } from "@/context/InternAppContext";
-import { formatHoursMinutes } from "@/data/demoData";
+import { summarizeWorklogs } from "@/lib/worklogSummary";
 
 function isAtOrPast430Pm(): boolean {
   const now = new Date();
@@ -107,6 +107,16 @@ function DashboardContent() {
         .filter((job) => !job.done)
         .reduce((sum, job) => sum + job.quantity, 0),
     [state.labelJobs]
+  );
+
+  const worklogSummary = useMemo(
+    () =>
+      summarizeWorklogs({
+        totalLoggedHours: state.totalLoggedHours,
+        targetHours: state.profile.targetHours,
+        workdays: state.workdays,
+      }),
+    [state.totalLoggedHours, state.profile.targetHours, state.workdays]
   );
 
   return (
@@ -368,10 +378,10 @@ function DashboardContent() {
         </p>
         <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
           <span className="text-4xl font-extrabold tracking-tight text-[var(--accent-teal)]">
-            {formatHoursMinutes(state.totalLoggedHours)}
+            {worklogSummary.loggedLabel}
           </span>
           <span className="text-sm text-[var(--text-secondary)]">
-            · {state.workdays.length} araw
+            · {worklogSummary.totalDays} araw · {worklogSummary.savedReportsCount}/{worklogSummary.totalDays} reports
           </span>
         </div>
         <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
