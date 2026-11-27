@@ -20,7 +20,7 @@ import { useInternApp } from "@/context/InternAppContext";
 import { MORE_KNOWLEDGE_CATEGORIES } from "@/data/demoData";
 import type { NavRoute } from "@/types/intern";
 
-const NAV_ITEMS: {
+const MOBILE_NAV_ITEMS: {
   href: NavRoute;
   label: string;
   matchPrefixes: string[];
@@ -32,6 +32,10 @@ const NAV_ITEMS: {
   { href: "/request", label: "Request", matchPrefixes: ["/request"], icon: FilePenLine },
   { href: "/more", label: "More", matchPrefixes: ["/more"], icon: MoreHorizontal },
 ];
+
+const DESKTOP_COLLAPSED_NAV_ITEMS = MOBILE_NAV_ITEMS.filter(
+  (item) => item.href !== "/dashboard"
+);
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -55,6 +59,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const desktopSearchRef = useRef<HTMLDivElement>(null);
 
   const isLight = theme === "light";
+
+  // Desktop view has no Home tab: redirect /dashboard to /oras on desktop viewports (>= 768px)
+  useEffect(() => {
+    if (!state.signedIn || pathname !== "/dashboard") return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const syncDesktopRoute = () => {
+      if (mq.matches) {
+        router.replace("/oras");
+      }
+    };
+    syncDesktopRoute();
+    mq.addEventListener("change", syncDesktopRoute);
+    return () => mq.removeEventListener("change", syncDesktopRoute);
+  }, [state.signedIn, pathname, router]);
 
   useEffect(() => {
     if (!desktopSearchOpen) return;
@@ -84,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const activeHref = useMemo<NavRoute>(() => {
     if (pathname === "/") return "/dashboard";
-    const found = NAV_ITEMS.find((item) =>
+    const found = MOBILE_NAV_ITEMS.find((item) =>
       item.matchPrefixes.some((p) => p !== "/" && pathname.startsWith(p))
     );
     return found?.href ?? "/dashboard";
@@ -92,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    const pages = NAV_ITEMS.map((n) => ({
+    const pages = MOBILE_NAV_ITEMS.map((n) => ({
       id: `page-${n.href}`,
       group: "Screens",
       title: n.label,
@@ -143,7 +161,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <SignInScreen
         onSignIn={signInWithCredentials}
-        onSuccess={() => router.push("/dashboard")}
+        onSuccess={() => {
+          const isDesktop =
+            typeof window !== "undefined" &&
+            window.matchMedia("(min-width: 768px)").matches;
+          router.push(isDesktop ? "/oras" : "/dashboard");
+        }}
       />
     );
   }
@@ -166,7 +189,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         onToggleCollapsed={() => setSidebarCollapsed((prev) => !prev)}
         activeHref={activeHref}
         pendingLabelsCount={pendingLabelsCount}
-        collapsedNavItems={NAV_ITEMS}
+        collapsedNavItems={DESKTOP_COLLAPSED_NAV_ITEMS}
       />
 
       {/* Main Column */}
@@ -351,7 +374,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto w-full max-w-2xl flex-1 px-4 pt-5 pb-[calc(var(--bottom-nav-height)+2.25rem+env(safe-area-inset-bottom))] md:max-w-5xl md:px-8 md:py-5"
+          className="mx-auto w-full max-w-2xl flex-1 px-4 pt-5 pb-[calc(var(--bottom-nav-height)+2.25rem+env(safe-area-inset-bottom))] md:max-w-6xl md:px-7 md:py-5"
         >
           {children}
         </main>
@@ -363,7 +386,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--border-subtle)] bg-[var(--bg-header)]/98 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
       >
         <ul className="mx-auto grid max-w-2xl grid-cols-5">
-          {NAV_ITEMS.map((item) => {
+          {MOBILE_NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = activeHref === item.href;
             return (

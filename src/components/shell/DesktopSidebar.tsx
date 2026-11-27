@@ -29,11 +29,10 @@ interface DesktopSidebarProps {
 }
 
 const DESKTOP_PRIMARY_LINKS: { href: NavRoute; label: string }[] = [
-  { href: "/dashboard", label: "Home" },
   { href: "/oras", label: "Oras at reports" },
   { href: "/me/leads", label: "Leads" },
   { href: "/request", label: "Request" },
-  { href: "/more", label: "Profile & More" },
+  { href: "/more", label: "Profile" },
 ];
 
 const STOCK_BUYING_LINKS = [
@@ -111,8 +110,8 @@ export function DesktopSidebar({
             {/* Top Logo + Collapse Sidebar Arrow */}
             <div className="flex items-start justify-between gap-2">
               <Link
-                href="/dashboard"
-                aria-label="Ashai Apparel Smart Hub Home"
+                href="/oras"
+                aria-label="Ashai Apparel Smart Hub Oras at reports"
                 className="block rounded-lg px-0.5 py-0.5"
               >
                 {isLight ? (
