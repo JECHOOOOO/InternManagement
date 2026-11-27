@@ -8,6 +8,8 @@ export interface WorklogSummary {
   percentComplete: number;
   loggedLabel: string;
   remainingLabel: string;
+  loggedDecimal: string;
+  remainingDecimal: string;
   totalDays: number;
   savedReportsCount: number;
   pendingReportsCount: number;
@@ -53,6 +55,8 @@ export function summarizeWorklogs(params: {
     percentComplete,
     loggedLabel: formatHoursMinutes(loggedHours),
     remainingLabel: formatHoursMinutes(remainingHours),
+    loggedDecimal: loggedHours.toFixed(2),
+    remainingDecimal: remainingHours.toFixed(2),
     totalDays,
     savedReportsCount,
     pendingReportsCount: Math.max(0, totalDays - savedReportsCount),

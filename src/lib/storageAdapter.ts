@@ -18,7 +18,7 @@ import type {
  */
 
 export const SESSION_KEY = "ashai-intern-session-v7";
-export const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v7:";
+export const ACCOUNT_KEY_PREFIX = "ashai-intern-account-v8:";
 export const ROSTER_KEY = "ashai-intern-cleaning-roster-v7";
 export const THEME_KEY = "ashai-theme-v1";
 

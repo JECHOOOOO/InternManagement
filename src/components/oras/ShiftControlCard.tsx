@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, Clock, LogIn, LogOut } from "lucide-react";
+import { Camera, LogIn, LogOut } from "lucide-react";
 import { AccessibleModal } from "@/components/AccessibleModal";
 import { SHIFT_TASK_OPTIONS } from "@/data/demoData";
 import { resolveShiftTrack } from "@/lib/worklogSummary";
@@ -49,37 +49,32 @@ export function ShiftControlCard({
 
   const resolvedShiftTrack = customTask.trim()
     ? customTask.trim()
-    : resolveShiftTrack(nextShiftTrack || activeShiftTrack || SHIFT_TASK_OPTIONS[0], customTask);
+    : resolveShiftTrack(
+        nextShiftTrack || activeShiftTrack || SHIFT_TASK_OPTIONS[0],
+        customTask
+      );
 
   return (
     <>
       <section
         aria-labelledby="shift-status-heading"
-        className="ashai-card flex h-full flex-col justify-between rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4"
+        className="ashai-card rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-5"
       >
-        <div>
-          <div className="flex items-center justify-between gap-2">
-            <h2
-              id="shift-status-heading"
-              className="text-xs font-bold tracking-[0.14em] text-[var(--text-muted)] uppercase"
-            >
-              {timedIn ? "Nakapasok ka ngayon" : "Ano ang gagawin mo ngayon"}
-            </h2>
-            {timedIn ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent-teal-soft)] px-2 py-0.5 text-[0.68rem] font-bold text-[var(--accent-teal)]">
-                <Clock className="size-3" aria-hidden="true" />
-                Active
-              </span>
-            ) : null}
-          </div>
+        <h2
+          id="shift-status-heading"
+          className="text-[0.68rem] font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase"
+        >
+          {timedIn ? "NAKAPASOK KA NGAYON" : "ANO ANG GAGAWIN MO NGAYON"}
+        </h2>
 
-          {timedIn ? (
-            <div className="mt-4 flex items-center justify-between gap-3">
+        {timedIn ? (
+          <div className="mt-4 space-y-4">
+            <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-lg font-extrabold text-[var(--text-primary)]">
+                <p className="text-base font-bold text-[var(--text-primary)]">
                   {activeShiftTrack}
                 </p>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                   Thu, Nov 26 · pumasok {activeShiftStartLabel}
                 </p>
               </div>
@@ -88,91 +83,85 @@ export function ShiftControlCard({
                 <img
                   src={timeInPhotoDataUrl}
                   alt="Time-in attendance photo"
-                  className="size-14 shrink-0 rounded-xl border border-[var(--border-teal)] object-cover"
+                  className="size-12 shrink-0 rounded-xl border border-[var(--border-teal)] object-cover"
                 />
               ) : null}
             </div>
-          ) : (
-            <form
-              id="shift-timein-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setTimeInPhotoError(null);
-                setTimeInModalOpen(true);
-              }}
-              className="mt-3 space-y-2.5"
-            >
-              <div>
-                <label htmlFor="next-shift-track" className="visually-hidden">
-                  Today&apos;s task
-                </label>
-                <select
-                  id="next-shift-track"
-                  value={nextShiftTrack}
-                  onChange={(e) => setNextShiftTrack(e.target.value)}
-                  className="ashai-control"
-                >
-                  <option value="">Piliin ang gawain...</option>
-                  {SHIFT_TASK_OPTIONS.map((task) => (
-                    <option key={task} value={task}>
-                      {task}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
-              <div>
-                <label htmlFor="custom-shift-track" className="visually-hidden">
-                  Custom task
-                </label>
-                <input
-                  id="custom-shift-track"
-                  type="text"
-                  value={customTask}
-                  onChange={(e) => setCustomTask(e.target.value)}
-                  placeholder="...o i-type kung wala sa listahan"
-                  className="ashai-control"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="shift-task-details" className="visually-hidden">
-                  Dagdag na detalye (opsyonal)
-                </label>
-                <input
-                  id="shift-task-details"
-                  type="text"
-                  value={taskDetails}
-                  onChange={(e) => setTaskDetails(e.target.value)}
-                  placeholder="Dagdag na detalye (opsyonal)"
-                  className="ashai-control"
-                />
-              </div>
-            </form>
-          )}
-        </div>
-
-        <div className="mt-4">
-          {timedIn ? (
             <button
               type="button"
               onClick={() => setTimeOutModalOpen(true)}
-              className="ashai-tap-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--timeout-btn-bg)] px-4 py-2.5 text-sm font-extrabold text-[var(--timeout-btn-text)] transition hover:bg-[var(--timeout-btn-hover)]"
+              className="ashai-tap-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--timeout-btn-bg)] px-4 py-3 text-sm font-bold text-[var(--timeout-btn-text)] transition hover:bg-[var(--timeout-btn-hover)]"
             >
-              <LogOut className="size-4.5" aria-hidden="true" />
+              <LogOut className="size-4" aria-hidden="true" />
               <span>Time out</span>
             </button>
-          ) : (
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setTimeInPhotoError(null);
+              setTimeInModalOpen(true);
+            }}
+            className="mt-3.5 space-y-3"
+          >
+            <div>
+              <label htmlFor="next-shift-track" className="visually-hidden">
+                Piliin ang gawain
+              </label>
+              <select
+                id="next-shift-track"
+                value={nextShiftTrack}
+                onChange={(e) => setNextShiftTrack(e.target.value)}
+                className="ashai-control"
+              >
+                <option value="">Piliin ang gawain...</option>
+                {SHIFT_TASK_OPTIONS.map((task) => (
+                  <option key={task} value={task}>
+                    {task}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="custom-shift-track" className="visually-hidden">
+                Custom task
+              </label>
+              <input
+                id="custom-shift-track"
+                type="text"
+                value={customTask}
+                onChange={(e) => setCustomTask(e.target.value)}
+                placeholder="...o i-type kung wala sa listahan"
+                className="ashai-control"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="shift-task-details" className="visually-hidden">
+                Dagdag na detalye (opsyonal)
+              </label>
+              <input
+                id="shift-task-details"
+                type="text"
+                value={taskDetails}
+                onChange={(e) => setTaskDetails(e.target.value)}
+                placeholder="Dagdag na detalye (opsyonal)"
+                className="ashai-control"
+              />
+            </div>
+
             <button
               type="submit"
-              form="shift-timein-form"
-              className="ashai-tap-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent-teal)] px-4 py-2.5 text-sm font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)]"
+              className="ashai-tap-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent-teal)] px-4 py-3 text-sm font-bold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)]"
             >
-              <LogIn className="size-4.5" aria-hidden="true" />
+              <LogIn className="size-4" aria-hidden="true" />
               <span>Time in</span>
             </button>
-          )}
-        </div>
+          </form>
+        )}
       </section>
 
       {/* Time In Take-a-Picture Modal */}

@@ -247,10 +247,10 @@ export const DEMO_ACCOUNTS: DemoAuthAccount[] = [
       targetHours: 240,
       currentTrack: "IT / software development",
     },
-    initialLoggedHours: 22.09,
+    initialLoggedHours: 29.67,
     initialShiftStartLabel: "8:25 AM",
     initialShiftTrack: "IT / software development",
-    initialTimedIn: true,
+    initialTimedIn: false,
     initialCleaningAssigned: true,
   },
   {
@@ -558,11 +558,11 @@ export function createInitialStateForAccount(
       {
         id: `${account.id}-day-2026-11-26`,
         taskTitle: account.initialShiftTrack,
-        dateLabel: "Thu, Nov 26 · ngayon",
+        dateLabel: "Thu, Nov 26",
         timeRangeLabel: account.initialTimedIn
           ? `${account.initialShiftStartLabel} – bukas pa`
-          : "Hindi pa naka-time in",
-        hoursWorked: null,
+          : "8:25 AM – 5:01 PM",
+        hoursWorked: account.initialTimedIn ? null : 7.58,
         isCurrentShift: account.initialTimedIn,
         workArea: "Other",
         accomplishment: "",

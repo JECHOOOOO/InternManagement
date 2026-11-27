@@ -77,16 +77,16 @@ export function QuickLeadsCard({
   return (
     <section
       aria-labelledby="oras-client-leads-heading"
-      className="ashai-card space-y-3.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4"
+      className="ashai-card space-y-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-5"
     >
       <div>
         <h2
           id="oras-client-leads-heading"
-          className="text-base font-extrabold text-[var(--text-primary)]"
+          className="text-lg font-bold text-[var(--text-primary)]"
         >
           Client leads · {leads.length}
         </h2>
-        <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-muted)]">
+        <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">
           Businesses at properties na kakausapin para sa ERP o booking platform.
           I-update ang notes at follow-up pagkatapos makipag-usap.
         </p>
@@ -96,13 +96,13 @@ export function QuickLeadsCard({
         noValidate
         onSubmit={handleSubmit}
         aria-label="Quick add client lead"
-        className="space-y-3"
+        className="space-y-3.5"
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
           <div>
             <label
               htmlFor="oras-lead-business"
-              className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
+              className="mb-1.5 block text-xs font-bold text-[var(--text-primary)]"
             >
               Business / property name
             </label>
@@ -128,7 +128,7 @@ export function QuickLeadsCard({
           <div>
             <label
               htmlFor="oras-lead-contact"
-              className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
+              className="mb-1.5 block text-xs font-bold text-[var(--text-primary)]"
             >
               Contact person
             </label>
@@ -144,7 +144,7 @@ export function QuickLeadsCard({
           <div>
             <label
               htmlFor="oras-lead-channel"
-              className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
+              className="mb-1.5 block text-xs font-bold text-[var(--text-primary)]"
             >
               Email / phone / profile link
             </label>
@@ -160,7 +160,7 @@ export function QuickLeadsCard({
           <div>
             <label
               htmlFor="oras-lead-url"
-              className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
+              className="mb-1.5 block text-xs font-bold text-[var(--text-primary)]"
             >
               Link ng lead
             </label>
@@ -177,7 +177,7 @@ export function QuickLeadsCard({
           <div>
             <label
               htmlFor="oras-lead-followup"
-              className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
+              className="mb-1.5 block text-xs font-bold text-[var(--text-primary)]"
             >
               Next follow-up
             </label>
@@ -193,7 +193,7 @@ export function QuickLeadsCard({
           <div>
             <label
               htmlFor="oras-lead-product"
-              className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
+              className="mb-1.5 block text-xs font-bold text-[var(--text-primary)]"
             >
               Product
             </label>
@@ -214,7 +214,7 @@ export function QuickLeadsCard({
           <div className="sm:col-span-2">
             <label
               htmlFor="oras-lead-status"
-              className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
+              className="mb-1.5 block text-xs font-bold text-[var(--text-primary)]"
             >
               Status
             </label>
@@ -236,7 +236,7 @@ export function QuickLeadsCard({
         <div>
           <label
             htmlFor="oras-lead-notes"
-            className="mb-1 block text-xs font-bold text-[var(--text-primary)]"
+            className="mb-1.5 block text-xs font-bold text-[var(--text-primary)]"
           >
             Conversation notes / next action
           </label>
@@ -251,7 +251,7 @@ export function QuickLeadsCard({
 
         <button
           type="submit"
-          className="ashai-tap-target rounded-xl bg-[var(--accent-teal)] px-4 py-2 text-sm font-extrabold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)]"
+          className="ashai-tap-target rounded-xl bg-[var(--accent-teal)] px-4 py-2.5 text-sm font-bold text-[var(--accent-teal-ink)] transition hover:bg-[var(--accent-teal-hover)]"
         >
           Add lead
         </button>

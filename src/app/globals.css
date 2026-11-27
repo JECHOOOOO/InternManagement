@@ -9,26 +9,26 @@
   color-scheme: dark;
 
   --bg-canvas: #070a0a;
-  --bg-header: #0b0f0f;
-  --bg-card: #101515;
-  --bg-card-hover: #161d1d;
-  --bg-card-inner: #141a1a;
-  --bg-input: #0b0f0f;
-  --bg-pill: #1b2222;
+  --bg-header: #070a0a;
+  --bg-card: #000000;
+  --bg-card-hover: #0a0f0f;
+  --bg-card-inner: #050707;
+  --bg-input: #000000;
+  --bg-pill: #141c1c;
 
-  --border-subtle: #1f2727;
-  --border-control: #3a4747;
+  --border-subtle: #182020;
+  --border-control: #222b2b;
   --border-teal: #2e8477;
   --border-amber: #7a581c;
 
   --text-primary: #f3f6f6;
-  --text-secondary: #c1cccc;
-  --text-muted: #93a3a3;
+  --text-secondary: #b4c0c0;
+  --text-muted: #7d8d8d;
 
-  --accent-teal: #4dc4b2;
-  --accent-teal-hover: #62d3c2;
+  --accent-teal: #56cbb9;
+  --accent-teal-hover: #69d7c6;
   --accent-teal-ink: #041b18;
-  --accent-teal-soft: rgba(77, 196, 178, 0.14);
+  --accent-teal-soft: rgba(86, 203, 185, 0.14);
 
   --accent-gold-bg: #745819;
   --accent-gold-hover: #886820;
@@ -155,6 +155,7 @@ body {
 }
 
 @layer base {
+
   button:not(:disabled):not([aria-disabled="true"]),
   [role="button"]:not([aria-disabled="true"]),
   input:where([type="button"], [type="submit"], [type="reset"]):not(:disabled) {
@@ -260,12 +261,12 @@ dialog.ashai-dialog::backdrop {
 }
 
 /* Accessible <details> disclosure chevron */
-.ashai-details > summary {
+.ashai-details>summary {
   list-style: none;
   cursor: pointer;
 }
 
-.ashai-details > summary::-webkit-details-marker {
+.ashai-details>summary::-webkit-details-marker {
   display: none;
 }
 
@@ -288,6 +289,7 @@ dialog.ashai-dialog::backdrop {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .ashai-details-chevron,
   .nav-indicator,
   .ashai-control {
