@@ -29,10 +29,11 @@ interface DesktopSidebarProps {
 }
 
 const DESKTOP_PRIMARY_LINKS: { href: NavRoute; label: string }[] = [
+  { href: "/dashboard", label: "Home" },
   { href: "/oras", label: "Oras at reports" },
   { href: "/me/leads", label: "Leads" },
   { href: "/request", label: "Request" },
-  { href: "/more", label: "Profile" },
+  { href: "/more", label: "Profile & More" },
 ];
 
 const STOCK_BUYING_LINKS = [
@@ -48,9 +49,8 @@ export function DesktopSidebar({
   pendingLabelsCount,
   collapsedNavItems,
 }: DesktopSidebarProps) {
-  const [prepareOpen, setPrepareOpen] = useState(true);
-  const [stockBuyingOpen, setStockBuyingOpen] = useState(true);
-  const allExpanded = prepareOpen && stockBuyingOpen;
+  const [prepareOpen, setPrepareOpen] = useState(false);
+  const [stockBuyingOpen, setStockBuyingOpen] = useState(false);
 
   return (
     <aside
@@ -152,31 +152,20 @@ export function DesktopSidebar({
               </button>
             </div>
 
-            {/* Collapse all / Expand all */}
-            <div className="mt-4 flex justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  const next = !allExpanded;
-                  setPrepareOpen(next);
-                  setStockBuyingOpen(next);
-                }}
-                className={`text-xs font-semibold transition ${
-                  isLight
-                    ? "text-[#7d9893] hover:text-[#4dc4b2]"
-                    : "text-[#5d746f] hover:text-[#0e7c6b]"
-                }`}
-              >
-                {allExpanded ? "Collapse all" : "Expand all"}
-              </button>
-            </div>
-
-            {/* Nav Items + Prepare + Stock & Buying */}
+            {/* Nav Items + Collapsed Ops Tools */}
             <nav
               aria-label="Primary"
-              className="mt-2 min-h-0 flex-1 space-y-5 overflow-y-auto pr-0.5"
+              className="mt-5 min-h-0 flex-1 space-y-5 overflow-y-auto pr-0.5"
             >
-              <ul className="space-y-1">
+              <div>
+                <p
+                  className={`mb-1.5 px-2 text-[0.68rem] font-bold tracking-[0.14em] uppercase ${
+                    isLight ? "text-[#7a948f]" : "text-[#5a726c]"
+                  }`}
+                >
+                  Intern
+                </p>
+                <ul className="space-y-1">
                 {DESKTOP_PRIMARY_LINKS.map((item) => {
                   const isActive = activeHref === item.href;
                   return (
@@ -211,9 +200,24 @@ export function DesktopSidebar({
                     </li>
                   );
                 })}
-              </ul>
+                </ul>
+              </div>
 
-              {/* PREPARE Section */}
+              {/* Ops shortcuts (collapsed by default to keep intern nav clean) */}
+              <div
+                className={`space-y-2 border-t pt-4 ${
+                  isLight ? "border-[#192b28]" : "border-[#c2d6d0]"
+                }`}
+              >
+                <p
+                  className={`px-2 text-[0.68rem] font-bold tracking-[0.14em] uppercase ${
+                    isLight ? "text-[#637e79]" : "text-[#657c77]"
+                  }`}
+                >
+                  Floor Tools
+                </p>
+
+                {/* PREPARE Section */}
               <div>
                 <button
                   type="button"
@@ -332,6 +336,7 @@ export function DesktopSidebar({
                     ))}
                   </ul>
                 ) : null}
+              </div>
               </div>
             </nav>
           </div>

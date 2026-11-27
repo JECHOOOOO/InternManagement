@@ -1,12 +1,12 @@
 export type NavRoute = "/dashboard" | "/oras" | "/me/leads" | "/request" | "/more";
 
 export type WorkAreaOption =
-  | "Other"
-  | "IT / software development"
-  | "IT QA / testing"
-  | "Sticker maker"
-  | "Stock count / Locations"
-  | "Client outreach";
+  | "IT"
+  | "Business development"
+  | "Industrial Engineering"
+  | "Multimedia"
+  | "T-shirt design"
+  | "Other";
 
 export interface WorkdayLog {
   id: string;

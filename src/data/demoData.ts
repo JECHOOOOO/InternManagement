@@ -14,12 +14,30 @@ import type {
 export const APP_BUILD_TAG = "build D_1UsqZ3";
 
 export const WORK_AREA_OPTIONS: WorkAreaOption[] = [
+  "IT",
+  "Business development",
+  "Industrial Engineering",
+  "Multimedia",
+  "T-shirt design",
   "Other",
+];
+
+export const SHIFT_TASK_OPTIONS: string[] = [
   "IT / software development",
   "IT QA / testing",
+  "IT QA",
   "Sticker maker",
-  "Stock count / Locations",
-  "Client outreach",
+  "Stock Count",
+  "Location setup",
+  "Intern Guide",
+  "Client prospecting / lead follow-up",
+  "Process improvement / IE study",
+  "Multimedia / content production",
+  "T-shirt Design",
+  "Inventory updater",
+  "Cutter",
+  "Time and motion study of the staff",
+  "Other",
 ];
 
 export const LEAD_PRODUCTS: LeadProduct[] = [

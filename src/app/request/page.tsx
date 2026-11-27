@@ -686,8 +686,8 @@ export default function RequestPage() {
 
         {state.requests.length === 0 ? (
           <p className="py-5 text-center text-sm leading-relaxed text-[var(--text-secondary)]">
-            No requests yet. Pick one above — leave, materials, cash advance, or
-            time-in correction.
+            No requests yet. Pick one above — leave, materials, or time-in
+            correction.
           </p>
         ) : (
           <ul className="mt-3 space-y-3">
